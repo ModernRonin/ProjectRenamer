@@ -2,8 +2,6 @@
   "profiles": {
     "ModernRonin.ProjectRenamer": {
       "commandName": "Project",
-      "commandLineArgs": "Deon.Shared.PoCModel Deon.Domain.PoC",
-      "workingDirectory": "C:\\Projects\\Deon\\Server\\prototyping"
     }
   }
 }

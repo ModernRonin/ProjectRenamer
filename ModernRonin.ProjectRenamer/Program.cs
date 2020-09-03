@@ -92,7 +92,7 @@ namespace ModernRonin.ProjectRenamer
             if (doesUserAgree("Do you want me to create a commit for you?"))
             {
                 var arguments = $"commit -m \"Renamed {oldProjectName} to {newProjectName}\"";
-                RunTool("git", arguments, () => { Console.Error.WriteLine($"'git {arguments}' failed");});
+                RunTool("git", arguments, () => { Console.Error.WriteLine($"'git {arguments}' failed"); });
             }
 
             bool doesUserAgree(string question)
