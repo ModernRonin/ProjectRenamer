@@ -63,7 +63,7 @@ If *renameproject* detects uncommitted changes, added files or the like, it will
 * you cannot use this with projects of other types than `csproj`, for example `fsproj`
 * I have not tested this with old-style, pre-SDK `csproj` projects
 * the detection of whether the local repo is clean might throw false positives in some cases
-* you cannot use wildcards, like `renameproject ModernRonin.CommonServices.*`ModernRonin.Common.Services.*` - this would be very handy for the wide-spread convention to have an accompanying `*.Tests` project
+* you cannot use wildcards, like `renameproject ModernRonin.CommonServices.* ModernRonin.Common.Services.* ` - this would be very handy for the wide-spread convention to have an accompanying ` *.Tests ` project
 * you need to manually update the tool with `dotnet tool update -g ModernRonin.ProjectRenamer` and you need to come here to check whether there is a new version (or check nuget)
 * if you use paket as a global tool instead of as a local tool, paket support will fail currently - you should really switch to using paket as a local tool, if you can. but on the other hand, in the future *renameproject* 
 might just become smarter about this using a combination of checking whether there is `paket` in the `PATH` and the presence of `dotnet-tools.json` and whether it contains an entry for paket
