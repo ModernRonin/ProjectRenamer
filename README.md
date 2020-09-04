@@ -38,33 +38,33 @@ renameproject ModernRonin.ProjectRenamer ModernRonin.RenameProject
 What will happen:
 * the project file will be renamed
 * the folder of the project file will be renamed
-* the renames use `git mv` so they keep your history intact
+* renaming is done with `git mv` so it keeps your history intact
 * all `<ProjectReference>` tags in other projects in your solution referencing the project will be adjusted
-* if you use [paket](https://github.com/fsprojects/Paket) **as a local dotnet tool** and you agree to a prompt, a `paket install` will be run
+* if you use [paket](https://github.com/fsprojects/Paket) **as a local dotnet tool** (see [Soft Limitations](#soft-limitations)) and you agree to a prompt, `paket install` will be run
 * all changes will be staged in git
-* if you agree to the corresponding prompt, a `dotnet build` will be run to see whether anything worked well
+* if you agree to the corresponding prompt, a `dotnet build` will be run just to be totally safe that everything worked well, for very cautious/diligent people :-)
 * if you agree to another prompt, a commit of the form `Renamed <oldProjectName> to <newProjectName>` will be created automatically
 
 If anything goes wrong, all changes will be discarded.
 
 ## Limitations
-*renameproject* has a few limitations. Some of them are *hard limitations*, meaning they are unlikely to go away, others are *soft limitations*, meaning they exist only because I simply have not gotten round to fix them. I also 
-do not really have a lot of free time to spend on this, but am totally open to PRs. 
+*renameproject* has a few limitations. Some of them are *hard limitations*, meaning they are unlikely to go away, others are *soft limitations*, meaning they exist only because I simply have not gotten round to fix them yet. I  
+do not really have a lot of free time to spend on this, but am **totally open to PRs (hint hint)**. 
 
-### Hard
+### Hard Limitations
 Your local repository copy must be clean. This is to ensure that in case we have to discard changes, we don't discard anything you wouldn't want discarded, by accident.
 If *renameproject* detects uncommitted changes, added files or the like, it will abort its operation.
 
 
-### Soft
+### Soft Limitations
 * the prompts (build, paket and commit) cannot be avoided using command-line flags
 * you cannot have more than one solution file or the solution file in another location than the current directory - could be turned into an optional command-line argument in the future
 * you cannot use this without git - the git-aspects could be made optional via a command-line flag in the future
 * you cannot use this with projects of other types than `csproj`, for example `fsproj`
 * I have not tested this with old-style, pre-SDK `csproj` projects
-* the detection of whether the local repo is clean might throw some false positives in some cases
-* you cannot supply wildcards, like `renameproject ModernRonin.CommonServices.*`ModernRonin.Common.Services.*`
-* you need to manually update the tool with `dotnet tool update -g ModernRonin.ProjectRenamer`
+* the detection of whether the local repo is clean might throw false positives in some cases
+* you cannot use wildcards, like `renameproject ModernRonin.CommonServices.*`ModernRonin.Common.Services.*` - this would be very handy for the wide-spread convention to have an accompanying `*.Tests` project
+* you need to manually update the tool with `dotnet tool update -g ModernRonin.ProjectRenamer` and you need to come here to check whether there is a new version (or check nuget)
 * if you use paket as a global tool instead of as a local tool, paket support will fail currently - you should really switch to using paket as a local tool, if you can. but on the other hand, in the future *renameproject* 
 might just become smarter about this using a combination of checking whether there is `paket` in the `PATH` and the presence of `dotnet-tools.json` and whether it contains an entry for paket
 
