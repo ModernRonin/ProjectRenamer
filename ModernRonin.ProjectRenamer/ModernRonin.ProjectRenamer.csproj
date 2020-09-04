@@ -10,6 +10,7 @@
     <PackAsTool>true</PackAsTool>
 	<ToolCommandName>renameproject</ToolCommandName>
 	<PackageOutputPath>./nupkg</PackageOutputPath>
+	<Description>tool for renaming C# projects</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
