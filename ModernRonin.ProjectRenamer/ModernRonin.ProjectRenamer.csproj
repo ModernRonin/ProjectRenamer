@@ -8,7 +8,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>solution, csproj, tool</PackageTags>
     <PackAsTool>true</PackAsTool>
-	<ToolCommandName>projectrename</ToolCommandName>
+	<ToolCommandName>renameproject</ToolCommandName>
 	<PackageOutputPath>./nupkg</PackageOutputPath>
   </PropertyGroup>
 
