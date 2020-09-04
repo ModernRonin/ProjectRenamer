@@ -1,17 +1,17 @@
 # projectrename
 
 ## Summary
-How often have you felt the need to rename a C# project? If you have come here, then you knwo that the most important existing IDE, Visual Studio, does not really support this scenario very well.
+How often have you felt the need to rename a C# project? If you have come here, then you know that the most important existing IDE for C#, Visual Studio, does not really support this scenario very well.
 
 This tool takes care of this for you, provided your use-case follows a set of fairly common practices:
-* you use git as a repository
-* your csproj files have the same name as the folder in which they reside together with accompanying source code
-* you don't have more than one solution file (*.sln) in one directory
-* you have dotnetcore 3.1 or above
+* you use **git** as a repository
+* your `csproj` files have the same name as the folder in which they reside together with accompanying source code
+* you don't have more than one solution file (`.sln`) in one directory
+* you have **dotnetcore 3.1** or above
 
 
 ## Get it
-projectrename is intended to be used as a global dotnet tool. 
+*renameproject* is intended to be used as a global dotnet tool. 
 (You could install it as a local tool, too, but given what it does this does not really make a lot of sense.)
 
 You install it by executing:
@@ -27,7 +27,8 @@ You use it from the command line, in the directory of your solution:
 dotnet renameproject <oldProjectName> <newProjectName>
 ```
 
-The project names include neither path nor extension (.csproj). projectrename will find your project just by the name, no matter how deeply it might be hidden in your directory structure. It must be linked into the solution, though.
+The project names include neither path nor extension (.csproj). *renameproject* will find your project just by the name, no matter how deeply it might be hidden in your directory structure.
+It must be linked into the solution, though.
 
 Example usage:
 ```shell
@@ -47,12 +48,12 @@ What will happen:
 If anything goes wrong, all changes will be discarded.
 
 ## Limitations
-ProjectRenamer has a few limitations. Some of them are *hard limitations*, meaning they are unlikely to go away, others are *soft limitations*, meaning they exist only because I simply have not gotten round to fix them. I also 
+*renameproject* has a few limitations. Some of them are *hard limitations*, meaning they are unlikely to go away, others are *soft limitations*, meaning they exist only because I simply have not gotten round to fix them. I also 
 do not really have a lot of free time to spend on this, but am totally open to PRs. 
 
 ### Hard
 Your local repository copy must be clean. This is to ensure that in case we have to discard changes, we don't discard anything you wouldn't want discarded, by accident.
-If ProjectRenamer detects uncommitted changes, added files or the like, it will abort its operation.
+If *renameproject* detects uncommitted changes, added files or the like, it will abort its operation.
 
 
 ### Soft
@@ -63,6 +64,7 @@ If ProjectRenamer detects uncommitted changes, added files or the like, it will 
 * I have not tested this with old-style, pre-SDK `csproj` projects
 * the detection of whether the local repo is clean might throw some false positives in some cases
 * you cannot supply wildcards, like `dotnet renameproject ModernRonin.CommonServices.*`ModernRonin.Common.Services.*`
+* you need to manually update the tool with `dotnet tool update -g ModernRonin.ProjectRenamer`
 
 
 ## License
