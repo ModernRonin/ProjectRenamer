@@ -52,9 +52,9 @@ If anything goes wrong, all changes will be discarded.
 do not really have a lot of free time to spend on this, but am **totally open to PRs (hint hint)**. 
 
 ### Hard Limitations
-Your local repository copy must be clean. This is to ensure that in case we have to discard changes, we don't discard anything you wouldn't want discarded, by accident.
+* Your local repository copy must be clean. This is to ensure that in case we have to discard changes, we don't discard anything you wouldn't want discarded, by accident.
 If *renameproject* detects uncommitted changes, added files or the like, it will abort its operation.
-
+* the tool won't adjust your namespaces - just use R# for this.
 
 ### Soft Limitations
 * the prompts (build, paket and commit) cannot be avoided using command-line flags
