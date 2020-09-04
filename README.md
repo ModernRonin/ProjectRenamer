@@ -1,4 +1,4 @@
-# projectrename
+# renameproject
 
 ## Summary
 How often have you felt the need to rename a C# project? If you have come here, then you know that the most important existing IDE for C#, Visual Studio, does not really support this scenario very well.
@@ -24,7 +24,7 @@ dotnet tool install -g ModernRonin.ProjectRenamer
 You use it from the command line, in the directory of your solution:
 
 ```shell
-dotnet renameproject <oldProjectName> <newProjectName>
+renameproject <oldProjectName> <newProjectName>
 ```
 
 The project names include neither path nor extension (.csproj). *renameproject* will find your project just by the name, no matter how deeply it might be hidden in your directory structure.
@@ -32,7 +32,7 @@ It must be linked into the solution, though.
 
 Example usage:
 ```shell
-dotnet renameproject ModernRonin.ProjectRenamer ModernRonin.RenameProject
+renameproject ModernRonin.ProjectRenamer ModernRonin.RenameProject
 ```
 
 What will happen:
@@ -40,7 +40,7 @@ What will happen:
 * the folder of the project file will be renamed
 * the renames use `git mv` so they keep your history intact
 * all `<ProjectReference>` tags in other projects in your solution referencing the project will be adjusted
-* if you use [paket](https://github.com/fsprojects/Paket) and you agree to a prompt, a `paket install` will be run
+* if you use [paket](https://github.com/fsprojects/Paket) **as a local dotnet tool** and you agree to a prompt, a `paket install` will be run
 * all changes will be staged in git
 * if you agree to the corresponding prompt, a `dotnet build` will be run to see whether anything worked well
 * if you agree to another prompt, a commit of the form `Renamed <oldProjectName> to <newProjectName>` will be created automatically
@@ -63,8 +63,10 @@ If *renameproject* detects uncommitted changes, added files or the like, it will
 * you cannot use this with projects of other types than `csproj`, for example `fsproj`
 * I have not tested this with old-style, pre-SDK `csproj` projects
 * the detection of whether the local repo is clean might throw some false positives in some cases
-* you cannot supply wildcards, like `dotnet renameproject ModernRonin.CommonServices.*`ModernRonin.Common.Services.*`
+* you cannot supply wildcards, like `renameproject ModernRonin.CommonServices.*`ModernRonin.Common.Services.*`
 * you need to manually update the tool with `dotnet tool update -g ModernRonin.ProjectRenamer`
+* if you use paket as a global tool instead of as a local tool, paket support will fail currently - you should really switch to using paket as a local tool, if you can. but on the other hand, in the future *renameproject* 
+might just become smarter about this using a combination of checking whether there is `paket` in the `PATH` and the presence of `dotnet-tools.json` and whether it contains an entry for paket
 
 
 ## License
