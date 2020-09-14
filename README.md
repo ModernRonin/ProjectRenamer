@@ -5,7 +5,7 @@
 How often have you felt the need to rename a C# project? If you have come here, then you know that the most important existing IDE for C#, Visual Studio, does not really support this scenario very well.
 
 This tool takes care of this for you, provided your use-case follows a set of fairly common practices:
-* you use **git** as a repository
+* you use **git** as a repository and have `git`(the executable) on your PATH
 * your `csproj` files have the same name as the folder in which they reside together with accompanying source code
 * you don't have more than one solution file (`.sln`) in one directory
 * you have **dotnetcore 3.1** or above
