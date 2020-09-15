@@ -1,10 +1,11 @@
 # renameproject
-
+[![NuGet](https://img.shields.io/nuget/v/ModernRonin.ProjectRenamer.svg)](https://www.nuget.org/packages/ModernRonin.ProjectRenamer/)
+[![NuGet](https://img.shields.io/nuget/dt/ModernRonin.ProjectRenamer.svg)](https://www.nuget.org/packages/ModernRonin.ProjectRenamer)
 ## Summary
 How often have you felt the need to rename a C# project? If you have come here, then you know that the most important existing IDE for C#, Visual Studio, does not really support this scenario very well.
 
 This tool takes care of this for you, provided your use-case follows a set of fairly common practices:
-* you use **git** as a repository
+* you use **git** as a repository and have `git`(the executable) on your PATH
 * your `csproj` files have the same name as the folder in which they reside together with accompanying source code
 * you don't have more than one solution file (`.sln`) in one directory
 * you have **dotnetcore 3.1** or above
@@ -52,9 +53,9 @@ If anything goes wrong, all changes will be discarded.
 do not really have a lot of free time to spend on this, but am **totally open to PRs (hint hint)**. 
 
 ### Hard Limitations
-Your local repository copy must be clean. This is to ensure that in case we have to discard changes, we don't discard anything you wouldn't want discarded, by accident.
+* Your local repository copy must be clean. This is to ensure that in case we have to discard changes, we don't discard anything you wouldn't want discarded, by accident.
 If *renameproject* detects uncommitted changes, added files or the like, it will abort its operation.
-
+* the tool won't adjust your namespaces - just use R# for this.
 
 ### Soft Limitations
 * the prompts (build, paket and commit) cannot be avoided using command-line flags
