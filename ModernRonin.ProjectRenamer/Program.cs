@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -137,7 +138,14 @@ namespace ModernRonin.ProjectRenamer
                 RunGit($"mv {oldPath} {newProjectPath}");
             }
 
-            void addToSolution() => runDotNet($"sln add -s {solutionFolderPath} {newProjectPath}");
+            void addToSolution()
+            {
+                var solutionFolderArgument = string.IsNullOrWhiteSpace(solutionFolderPath)
+                    ? string.Empty
+                    : $"-s {solutionFolderPath}";
+                runDotNet($"sln add {solutionFolderArgument} {newProjectPath}");
+            }
+
             void removeFromSolution() => runDotNet($"sln remove {oldProjectPath}");
 
             void runDotNet(string arguments) => RunTool("dotnet", arguments);
@@ -182,9 +190,26 @@ namespace ModernRonin.ProjectRenamer
                 CreateNoWindow = false,
                 RedirectStandardOutput = false
             };
-            var process = Process.Start(psi);
-            process.WaitForExit();
-            if (process.ExitCode != 0) onNonZeroExitCode();
+            try
+            {
+                var process = Process.Start(psi);
+                process.WaitForExit();
+                if (process.ExitCode != 0) onNonZeroExitCode();
+            }
+            catch (Win32Exception)
+            {
+                onProcessStartProblem();
+            }
+            catch (FileNotFoundException)
+            {
+                onProcessStartProblem();
+            }
+
+            void onProcessStartProblem()
+            {
+                Console.Error.WriteLine($"{tool} could not be found - make sure it's on your PATH.");
+                onNonZeroExitCode();
+            }
         }
     }
 }
