@@ -21,6 +21,22 @@ You install it by executing:
 dotnet tool install -g ModernRonin.ProjectRenamer
 ```
 
+## Update it
+If there is a new version out, you can update *renameproject* with
+
+```shell
+dotnet tool update --global ModernRonin.ProjectRenamer
+```
+
+### Release History
+1.0.1: 
+* fixed problem when target project was not linked into a solution folder
+* when required tools like `git` or `dotnet` are not found, a properly informative error message is displayed
+
+1.0.0: initial release
+
+
+
 ## Use it
 You use it from the command line, in the directory of your solution:
 
