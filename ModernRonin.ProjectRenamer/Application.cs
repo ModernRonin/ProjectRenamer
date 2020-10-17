@@ -70,26 +70,35 @@ namespace ModernRonin.ProjectRenamer
             addToSolution();
             updatePaket();
             stageAllChanges();
+            build();
+            commit();
 
-            if (_configuration.DoRunBuild)
+            void commit()
             {
-                Tool("dotnet", "build", () =>
+                if (_configuration.DoCreateCommit)
                 {
-                    if (DoesUserAgree(
-                        "dotnet build returned an error or warning - do you want to rollback all changes?"))
-                    {
-                        RollbackGit();
-                        Abort();
-                    }
-                });
+                    var arguments =
+                        $"commit -m \"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}\"";
+                    Tool("git", arguments,
+                        () => { Console.Error.WriteLine($"'git {arguments}' failed"); });
+                }
             }
 
-            if (DoesUserAgree("Do you want me to create a commit for you?"))
+            void build()
             {
-                var arguments =
-                    $"commit -m \"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}\"";
-                Tool("git", arguments,
-                    () => { Console.Error.WriteLine($"'git {arguments}' failed"); });
+                if (_configuration.DoRunBuild)
+                {
+                    Tool("dotnet", "build", () =>
+                    {
+                        if (DoesUserAgree(
+                            "dotnet build returned an error or warning - do you want to rollback all changes?")
+                        )
+                        {
+                            RollbackGit();
+                            Abort();
+                        }
+                    });
+                }
             }
 
             void stageAllChanges() => Git("add .");
