@@ -105,9 +105,7 @@ namespace ModernRonin.ProjectRenamer
 
             void updatePaket()
             {
-                if (isPaketUsed &&
-                    DoesUserAgree("This solution uses paket - do you want to run paket install?"))
-                    DotNet("paket install");
+                if (isPaketUsed && _configuration.DoRunPaketInstall) DotNet("paket install");
             }
 
             void replaceReferences()
