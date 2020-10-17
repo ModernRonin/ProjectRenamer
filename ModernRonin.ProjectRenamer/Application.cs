@@ -55,9 +55,9 @@ namespace ModernRonin.ProjectRenamer
                     $"Rename to:                 {_configuration.NewProjectName}",
                     $"at:                        {newProjectPath})",
                     $"Paket in use:              {isPaketUsed.AsText()}",
-                    $"Run paket install:         {_configuration.DontRunPaketInstall.AsText()}",
+                    $"Run paket install:         {(!_configuration.DontRunPaketInstall).AsText()}",
                     $"Run build after rename:    {_configuration.DoRunBuild.AsText()}",
-                    $"Create automatic commit:   {_configuration.DontCreateCommit.AsText()}",
+                    $"Create automatic commit:   {(!_configuration.DontCreateCommit).AsText()}",
                     "-----------------------------------------------",
                     "Do you want to continue with the rename operation?"
                 };
