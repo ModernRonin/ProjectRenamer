@@ -43,5 +43,7 @@ namespace ModernRonin.ProjectRenamer
                 onNonZeroExitCode();
             }
         }
+
+        public static void DotNet(string arguments) => Tool("dotnet", arguments);
     }
 }

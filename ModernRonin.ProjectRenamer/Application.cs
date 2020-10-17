@@ -78,7 +78,7 @@ namespace ModernRonin.ProjectRenamer
             {
                 if (Directory.Exists(".paket") &&
                     DoesUserAgree("This solution uses paket - do you want to run paket install?"))
-                    runDotNet("paket install");
+                    DotNet("paket install");
             }
 
             void replaceReferences()
@@ -114,12 +114,10 @@ namespace ModernRonin.ProjectRenamer
                 var solutionFolderArgument = string.IsNullOrWhiteSpace(solutionFolderPath)
                     ? string.Empty
                     : $"-s {solutionFolderPath}";
-                runDotNet($"sln add {solutionFolderArgument} {newProjectPath}");
+                DotNet($"sln add {solutionFolderArgument} {newProjectPath}");
             }
 
-            void removeFromSolution() => runDotNet($"sln remove {oldProjectPath}");
-
-            void runDotNet(string arguments) => Tool("dotnet", arguments);
+            void removeFromSolution() => DotNet($"sln remove {oldProjectPath}");
 
             (bool wasFound, string projectPath, string solutionFolder) findProject()
             {
