@@ -20,5 +20,5 @@
   <ItemGroup>
     <PackageReference Include="Sln" Version="0.3.0" />
   </ItemGroup>
-  <Import Project="Version.targets" />
+  <Import Project="release.history" />
 </Project>

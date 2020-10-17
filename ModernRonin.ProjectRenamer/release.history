@@ -1,0 +1,16 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<PropertyGroup>
+	<Version>1.0.1</Version>
+	<PackageReleaseNotes>
+1.0.1: 
+* bugfix: if a required tool like git cannot be found, give a proper error message
+* bugfix: if a project is not in a solution folder, the tools works now, too
+		
+1.0.0: 
+initial release
+	</PackageReleaseNotes>
+	  <!-- make MSBuild track this file for incremental builds. -->
+	  <!-- ref https://blogs.msdn.microsoft.com/msbuild/2005/09/26/how-to-ensure-changes-to-a-custom-target-file-prompt-a-rebuild/ -->
+	<MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+</PropertyGroup>
+</Project>
