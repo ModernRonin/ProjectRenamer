@@ -71,7 +71,7 @@ namespace ModernRonin.ProjectRenamer
             updatePaket();
             stageAllChanges();
 
-            if (DoesUserAgree("Finished - do you want to run a dotnet build to see whether all went well?"))
+            if (_configuration.DoRunBuild)
             {
                 Tool("dotnet", "build", () =>
                 {
