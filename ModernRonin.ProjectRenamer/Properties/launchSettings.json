@@ -2,6 +2,8 @@
   "profiles": {
     "ModernRonin.ProjectRenamer": {
       "commandName": "Project",
+      "commandLineArgs": "LibraryInSolutionFolder ProjectInSolutionFolder",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     }
   }
 }
