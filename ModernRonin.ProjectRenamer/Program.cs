@@ -17,21 +17,14 @@ namespace ModernRonin.ProjectRenamer
             if (1 != solutionFiles.Length)
                 Error("Needs to be run from a directory with exactly one *.sln file in it.");
             var solutionPath = Path.GetFullPath(solutionFiles.First());
-
-            var parser = configureCommandLine();
-
-            switch (parser.Parse(args))
+            switch (parseCommandLine())
             {
-                case HelpResult help:
+                case (_, HelpResult help):
                     Console.WriteLine(help.Text);
                     Environment.Exit(help.IsResultOfInvalidInput ? -1 : 0);
                     break;
-                case Configuration configuration:
-                    if (configuration.ProjectNames.Any(isInvalidProjectName))
-                    {
-                        var help = (HelpResult) parser.Parse(new[] {"?"});
-                        Error(help.Text);
-                    }
+                case (var helpOverview, Configuration configuration):
+                    if (configuration.ProjectNames.Any(isInvalidProjectName)) Error(helpOverview);
 
                     new Application(configuration, solutionPath).Run();
                     break;
@@ -41,11 +34,11 @@ namespace ModernRonin.ProjectRenamer
                     break;
             }
 
-            IBindingCommandLineParser configureCommandLine()
+            (string, object) parseCommandLine()
             {
-                var bindingCommandLineParser = ParserFactory.Create("renameproject",
+                var parser = ParserFactory.Create("renameproject",
                     "Rename C# projects comfortably, including renaming directories, updating references, keeping your git history intact, creating a git commit and updating paket, if needed.");
-                var cfg = bindingCommandLineParser.AddVerb<Configuration>();
+                var cfg = parser.DefaultVerb<Configuration>();
                 cfg.Parameter(c => c.DontCreateCommit)
                     .WithLongName("no-commit")
                     .WithShortName("nc")
@@ -68,7 +61,7 @@ namespace ModernRonin.ProjectRenamer
                         "the name of the existing project - don't provide path or extension, just the name as you see it in VS. Example: do not provide ./utilities/My.Wonderful.Utilities.csproj, but My.Wonderful.Utilities");
                 cfg.Parameter(c => c.NewProjectName)
                     .WithHelp("the new desired project name, again without path or extension");
-                return bindingCommandLineParser;
+                return (parser.HelpOverview, parser.Parse(args));
             }
 
             bool isInvalidProjectName(string projectName) =>
