@@ -45,7 +45,7 @@ namespace ModernRonin.ProjectRenamer
                 Path.Combine(newDir, $"{_configuration.NewProjectName}{Constants.ProjectFileExtension}");
             var isPaketUsed = Directory.Exists(".paket");
 
-            if (_configuration.DoReviewSettings)
+            if (!_configuration.DontReviewSettings)
             {
                 var lines = new[]
                 {
@@ -55,9 +55,9 @@ namespace ModernRonin.ProjectRenamer
                     $"Rename to:                 {_configuration.NewProjectName}",
                     $"at:                        {newProjectPath})",
                     $"Paket in use:              {isPaketUsed.AsText()}",
-                    $"Run paket install:         {_configuration.DoRunPaketInstall.AsText()}",
+                    $"Run paket install:         {_configuration.DontRunPaketInstall.AsText()}",
                     $"Run build after rename:    {_configuration.DoRunBuild.AsText()}",
-                    $"Create automatic commit:   {_configuration.DoCreateCommit.AsText()}",
+                    $"Create automatic commit:   {_configuration.DontCreateCommit.AsText()}",
                     "-----------------------------------------------",
                     "Do you want to continue with the rename operation?"
                 };
@@ -75,7 +75,7 @@ namespace ModernRonin.ProjectRenamer
 
             void commit()
             {
-                if (_configuration.DoCreateCommit)
+                if (!_configuration.DontCreateCommit)
                 {
                     var arguments =
                         $"commit -m \"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}\"";
@@ -105,7 +105,7 @@ namespace ModernRonin.ProjectRenamer
 
             void updatePaket()
             {
-                if (isPaketUsed && _configuration.DoRunPaketInstall) DotNet("paket install");
+                if (isPaketUsed && !_configuration.DontRunPaketInstall) DotNet("paket install");
             }
 
             void replaceReferences()

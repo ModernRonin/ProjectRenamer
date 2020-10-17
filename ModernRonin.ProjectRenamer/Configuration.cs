@@ -2,10 +2,10 @@
 {
     public class Configuration
     {
-        public bool DoRunPaketInstall { get; set; } = true;
-        public bool DoRunBuild { get; set; } = false;
-        public bool DoCreateCommit { get; set; } = true;
-        public bool DoReviewSettings { get; set; } = true;
+        public bool DontRunPaketInstall { get; set; }
+        public bool DoRunBuild { get; set; }
+        public bool DontCreateCommit { get; set; }
+        public bool DontReviewSettings { get; set; }
         public string OldProjectName { get; set; }
         public string NewProjectName { get; set; }
 

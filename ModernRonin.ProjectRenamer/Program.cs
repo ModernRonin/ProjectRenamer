@@ -46,23 +46,23 @@ namespace ModernRonin.ProjectRenamer
                 var bindingCommandLineParser = ParserFactory.Create("renameproject",
                     "Rename C# projects comfortably, including renaming directories, updating references, keeping your git history intact, creating a git commit and updating paket, if needed.");
                 var cfg = bindingCommandLineParser.AddVerb<Configuration>();
-                cfg.Parameter(c => c.DoCreateCommit)
-                    .WithLongName("commit")
-                    .WithShortName("c")
-                    .WithHelp("create a commit after renaming has finished");
+                cfg.Parameter(c => c.DontCreateCommit)
+                    .WithLongName("no-commit")
+                    .WithShortName("nc")
+                    .WithHelp("don't create a commit after renaming has finished");
                 cfg.Parameter(c => c.DoRunBuild)
                     .WithLongName("build")
                     .WithShortName("b")
                     .WithHelp(
                         "run a build after renaming (but before committing) to make sure everything worked fine.");
-                cfg.Parameter(c => c.DoRunPaketInstall)
-                    .WithLongName("paket")
-                    .WithShortName("p")
-                    .WithHelp("run paket install (if your solution uses paket as a local tool)");
-                cfg.Parameter(c => c.DoReviewSettings)
-                    .WithLongName("review")
-                    .WithShortName("r")
-                    .WithHelp("review all settings before starting work");
+                cfg.Parameter(c => c.DontRunPaketInstall)
+                    .WithLongName("no-paket")
+                    .WithShortName("np")
+                    .WithHelp("don't run paket install (if your solution uses paket as a local tool)");
+                cfg.Parameter(c => c.DontReviewSettings)
+                    .WithLongName("no-review")
+                    .WithShortName("nr")
+                    .WithHelp("don't review all settings before starting work");
                 cfg.Parameter(c => c.OldProjectName)
                     .WithHelp(
                         "the name of the existing project - don't provide path or extension, just the name as you see it in VS. Example: do not provide ./utilities/My.Wonderful.Utilities.csproj, but My.Wonderful.Utilities");
