@@ -43,6 +43,26 @@ namespace ModernRonin.ProjectRenamer
             var newDir = Path.Combine(Path.GetDirectoryName(oldDir), _configuration.NewProjectName);
             var newProjectPath =
                 Path.Combine(newDir, $"{_configuration.NewProjectName}{Constants.ProjectFileExtension}");
+            var isPaketUsed = Directory.Exists(".paket");
+
+            if (_configuration.DoReviewSettings)
+            {
+                var lines = new[]
+                {
+                    "Please review the following settings:",
+                    $"Project:                   {_configuration.OldProjectName}",
+                    $"found at:                  {oldProjectPath}",
+                    $"Rename to:                 {_configuration.NewProjectName}",
+                    $"at:                        {newProjectPath})",
+                    $"Paket in use:              {isPaketUsed.AsText()}",
+                    $"Run paket install:         {_configuration.DoRunPaketInstall.AsText()}",
+                    $"Run build after rename:    {_configuration.DoRunBuild.AsText()}",
+                    $"Create automatic commit:   {_configuration.DoCreateCommit.AsText()}",
+                    "-----------------------------------------------",
+                    "Do you want to continue with the rename operation?"
+                };
+                if (!DoesUserAgree(string.Join(Environment.NewLine, lines))) Abort();
+            }
 
             removeFromSolution();
             gitMove();
@@ -76,7 +96,7 @@ namespace ModernRonin.ProjectRenamer
 
             void updatePaket()
             {
-                if (Directory.Exists(".paket") &&
+                if (isPaketUsed &&
                     DoesUserAgree("This solution uses paket - do you want to run paket install?"))
                     DotNet("paket install");
             }
