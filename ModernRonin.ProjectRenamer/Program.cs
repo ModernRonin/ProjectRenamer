@@ -57,9 +57,13 @@ namespace ModernRonin.ProjectRenamer
                     .WithShortName("nr")
                     .WithHelp("don't review all settings before starting work");
                 cfg.Parameter(c => c.OldProjectName)
+                    .WithLongName("old-name")
+                    .WithShortName("o")
                     .WithHelp(
-                        "the name of the existing project - don't provide path or extension, just the name as you see it in VS. Example: do not provide ./utilities/My.Wonderful.Utilities.csproj, but My.Wonderful.Utilities");
+                        "the name of the existing project - don't provide path or extension, just the name as you see it in VS.");
                 cfg.Parameter(c => c.NewProjectName)
+                    .WithLongName("new-name")
+                    .WithShortName("n")
                     .WithHelp("the new desired project name, again without path or extension");
                 return (parser.HelpOverview, parser.Parse(args));
             }
