@@ -2,6 +2,8 @@
 <PropertyGroup>
 	<Version>1.0.1</Version>
 	<PackageReleaseNotes>
+2.0.0:
+* breaking changes: instead of asking the user interactively, behavior is now controlled via commandline switches
 1.0.1: 
 * bugfix: if a required tool like git cannot be found, give a proper error message
 * bugfix: if a project is not in a solution folder, the tools works now, too
