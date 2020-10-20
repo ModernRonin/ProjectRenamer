@@ -1,215 +1,77 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Microsoft.Build.Construction;
+using ModernRonin.FluentArgumentParser;
+using ModernRonin.FluentArgumentParser.Help;
+using ModernRonin.FluentArgumentParser.Parsing;
+using static ModernRonin.ProjectRenamer.Runtime;
 
 namespace ModernRonin.ProjectRenamer
 {
     class Program
     {
-        const string ProjectFileExtension = ".csproj";
-        static readonly Encoding _projectFileEncoding = Encoding.UTF8;
-
         static void Main(string[] args)
         {
-            if (args.Length != 2 || args.Any(a =>
-                a.Contains('\\') || a.Contains('/') ||
-                a.Contains(ProjectFileExtension, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                Error(
-                    "Usage: <oldProjectName> <newProjectName> where project names contain neither path nor extension. Example: not ./utilities/My.Wonderful.Utilities.csproj, but My.Wonderful.Utilities");
-            }
-
             var solutionFiles =
                 Directory.EnumerateFiles(".", "*.sln", SearchOption.TopDirectoryOnly).ToArray();
             if (1 != solutionFiles.Length)
                 Error("Needs to be run from a directory with exactly one *.sln file in it.");
-
-            EnsureGitIsClean();
-
             var solutionPath = Path.GetFullPath(solutionFiles.First());
-            Run(solutionPath, args.First(), args.Last());
-        }
-
-        static void EnsureGitIsClean()
-        {
-            run("update-index -q --refresh");
-            run("diff-index --quiet --cached HEAD --");
-            run("diff-files --quiet");
-            run("ls-files --exclude-standard --others");
-
-            void run(string arguments) =>
-                RunTool("git", arguments, () => Error("git does not seem to be clean, check git status"));
-        }
-
-        static void Error(string msg, bool doResetGit = false)
-        {
-            Console.Error.WriteLine(msg);
-            if (doResetGit)
+            switch (parseCommandLine())
             {
-                Console.Error.WriteLine("...running git reset to undo any changes...");
-                RollbackGit();
+                case (_, HelpResult help):
+                    Console.WriteLine(help.Text);
+                    Environment.Exit(help.IsResultOfInvalidInput ? -1 : 0);
+                    break;
+                case (var helpOverview, Configuration configuration):
+                    if (configuration.ProjectNames.Any(isInvalidProjectName)) Error(helpOverview);
+
+                    new Application(configuration, solutionPath).Run();
+                    break;
+                default:
+                    Error(
+                        "Something went seriously wrong. Please create an issue at https://github.com/ModernRonin/ProjectRenamer with as much detail as possible.");
+                    break;
             }
 
-            Abort();
-        }
-
-        static void Abort() => Environment.Exit(-1);
-
-        static void RollbackGit() => RunTool("git", "reset --hard HEAD", () => { });
-
-        static void Run(string solutionPath, string oldProjectName, string newProjectName)
-        {
-            var (wasFound, oldProjectPath, solutionFolderPath) = findProject();
-            if (!wasFound) Error($"{oldProjectName} cannot be found in the solution");
-
-            var oldDir = Path.GetDirectoryName(oldProjectPath);
-            var newDir = Path.Combine(Path.GetDirectoryName(oldDir), newProjectName);
-            var newProjectPath = Path.Combine(newDir, $"{newProjectName}{ProjectFileExtension}");
-
-            removeFromSolution();
-            gitMove();
-            replaceReferences();
-            addToSolution();
-            updatePaket();
-            stageAllChanges();
-
-            if (doesUserAgree("Finished - do you want to run a dotnet build to see whether all went well?"))
+            (string, object) parseCommandLine()
             {
-                RunTool("dotnet", "build", () =>
-                {
-                    if (doesUserAgree(
-                        "dotnet build returned an error or warning - do you want to rollback all changes?"))
-                    {
-                        RollbackGit();
-                        Abort();
-                    }
-                });
+                var parser = ParserFactory.Create("renameproject",
+                    "Rename C# projects comfortably, including renaming directories, updating references, keeping your git history intact, creating a git commit and updating paket, if needed.");
+                var cfg = parser.DefaultVerb<Configuration>();
+                cfg.Parameter(c => c.DontCreateCommit)
+                    .WithLongName("no-commit")
+                    .WithShortName("nc")
+                    .WithHelp("don't create a commit after renaming has finished");
+                cfg.Parameter(c => c.DoRunBuild)
+                    .WithLongName("build")
+                    .WithShortName("b")
+                    .WithHelp(
+                        "run a build after renaming (but before committing) to make sure everything worked fine.");
+                cfg.Parameter(c => c.DontRunPaketInstall)
+                    .WithLongName("no-paket")
+                    .WithShortName("np")
+                    .WithHelp("don't run paket install (if your solution uses paket as a local tool)");
+                cfg.Parameter(c => c.DontReviewSettings)
+                    .WithLongName("no-review")
+                    .WithShortName("nr")
+                    .WithHelp("don't review all settings before starting work");
+                cfg.Parameter(c => c.OldProjectName)
+                    .WithLongName("old-name")
+                    .WithShortName("o")
+                    .WithHelp(
+                        "the name of the existing project - don't provide path or extension, just the name as you see it in VS.");
+                cfg.Parameter(c => c.NewProjectName)
+                    .WithLongName("new-name")
+                    .WithShortName("n")
+                    .WithHelp("the new desired project name, again without path or extension");
+                return (parser.HelpOverview, parser.Parse(args));
             }
 
-            if (doesUserAgree("Do you want me to create a commit for you?"))
-            {
-                var arguments = $"commit -m \"Renamed {oldProjectName} to {newProjectName}\"";
-                RunTool("git", arguments, () => { Console.Error.WriteLine($"'git {arguments}' failed"); });
-            }
-
-            bool doesUserAgree(string question)
-            {
-                Console.WriteLine($"{question} [Enter=Yes, any other key=No]");
-                var key = Console.ReadKey();
-                return key.Key == ConsoleKey.Enter;
-            }
-
-            void stageAllChanges() => RunGit("add .");
-
-            void updatePaket()
-            {
-                if (Directory.Exists(".paket") &&
-                    doesUserAgree("This solution uses paket - do you want to run paket install?"))
-                    runDotNet("paket install");
-            }
-
-            void replaceReferences()
-            {
-                var projectFiles = Directory
-                    .EnumerateFiles(".", $"*{ProjectFileExtension}", SearchOption.AllDirectories)
-                    .ToList();
-                var (oldReference, newReference) =
-                    (searchPattern(oldProjectName), searchPattern(newProjectName));
-                projectFiles.ForEach(replaceIn);
-
-                void replaceIn(string projectFile)
-                {
-                    var contents = File.ReadAllText(projectFile, _projectFileEncoding);
-                    contents = contents.Replace(oldReference, newReference);
-                    File.WriteAllText(projectFile, contents, _projectFileEncoding);
-                }
-
-                string searchPattern(string name) => Path.Combine(name, name) + ProjectFileExtension;
-            }
-
-            void gitMove()
-            {
-                RunGit($"mv {oldDir} {newDir}");
-                var oldPath = Path.Combine(newDir, Path.GetFileName(oldProjectPath));
-                RunGit($"mv {oldPath} {newProjectPath}");
-            }
-
-            void addToSolution()
-            {
-                var solutionFolderArgument = string.IsNullOrWhiteSpace(solutionFolderPath)
-                    ? string.Empty
-                    : $"-s {solutionFolderPath}";
-                runDotNet($"sln add {solutionFolderArgument} {newProjectPath}");
-            }
-
-            void removeFromSolution() => runDotNet($"sln remove {oldProjectPath}");
-
-            void runDotNet(string arguments) => RunTool("dotnet", arguments);
-
-            (bool wasFound, string projectPath, string solutionFolder) findProject()
-            {
-                var solution = SolutionFile.Parse(solutionPath);
-                var project = solution.ProjectsInOrder.FirstOrDefault(p =>
-                    p.ProjectName.EndsWith(oldProjectName, StringComparison.InvariantCultureIgnoreCase));
-                return project switch
-                {
-                    null => (false, null, null),
-                    _ when project.ParentProjectGuid == null => (true, project.AbsolutePath, null),
-                    _ => (true, project.AbsolutePath,
-                        path(solution.ProjectsByGuid[project.ParentProjectGuid]))
-                };
-
-                string path(ProjectInSolution p)
-                {
-                    if (p.ParentProjectGuid == null) return p.ProjectName;
-                    var parent = solution.ProjectsByGuid[p.ParentProjectGuid];
-                    var parentPath = path(parent);
-                    return $"{parentPath}/{p.ProjectName}";
-                }
-            }
-        }
-
-        static void RunGit(string arguments) => RunTool("git", arguments);
-
-        static void RunTool(string tool, string arguments)
-        {
-            RunTool(tool, arguments, () => Error($"call '{tool} {arguments}' failed - aborting", true));
-        }
-
-        static void RunTool(string tool, string arguments, Action onNonZeroExitCode)
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = tool,
-                Arguments = arguments,
-                UseShellExecute = false,
-                CreateNoWindow = false,
-                RedirectStandardOutput = false
-            };
-            try
-            {
-                var process = Process.Start(psi);
-                process.WaitForExit();
-                if (process.ExitCode != 0) onNonZeroExitCode();
-            }
-            catch (Win32Exception)
-            {
-                onProcessStartProblem();
-            }
-            catch (FileNotFoundException)
-            {
-                onProcessStartProblem();
-            }
-
-            void onProcessStartProblem()
-            {
-                Console.Error.WriteLine($"{tool} could not be found - make sure it's on your PATH.");
-                onNonZeroExitCode();
-            }
+            bool isInvalidProjectName(string projectName) =>
+                projectName.Contains('\\') || projectName.Contains('/') ||
+                projectName.Contains(Constants.ProjectFileExtension,
+                    StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

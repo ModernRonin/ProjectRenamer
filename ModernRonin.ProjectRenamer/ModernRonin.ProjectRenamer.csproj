@@ -18,7 +18,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ModernRonin.FluentArgumentParser" Version="1.0.0" />
     <PackageReference Include="Sln" Version="0.3.0" />
   </ItemGroup>
-  <Import Project="Version.targets" />
+  <Import Project="release.history" />
 </Project>

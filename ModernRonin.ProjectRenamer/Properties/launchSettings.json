@@ -1,7 +1,24 @@
 {
   "profiles": {
-    "ModernRonin.ProjectRenamer": {
+    "rename library to project, in solution folder, no flags": {
       "commandName": "Project",
+      "commandLineArgs": "LibraryInSolutionFolder ProjectInSolutionFolder",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
+    "rename project to library, in solution folder, no review": {
+      "commandName": "Project",
+      "commandLineArgs": "ProjectInSolutionFolder LibraryInSolutionFolder --no-review",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
+    "rename library to project, in subfolder, no commit, build": {
+      "commandName": "Project",
+      "commandLineArgs": "LibraryInSubFolder ProjectInSubFolder --no-commit --build",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
+    "rename library to project, in subfolder, no commit, no paket": {
+      "commandName": "Project",
+      "commandLineArgs": "LibraryInSubFolder ProjectInSubFolder --no-commit --no-paket",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     }
   }
 }
