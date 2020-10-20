@@ -21,6 +21,21 @@ You install it by executing:
 dotnet tool install -g ModernRonin.ProjectRenamer
 ```
 
+## Update it
+If there is a new version out, you can update *renameproject* with
+
+```shell
+dotnet tool update --global ModernRonin.ProjectRenamer
+```
+
+### Release History
+2.0.0: all behavior where the tool prompted you before interactively is now controlled via commandline arguments
+1.0.1: 
+* fixed problem when target project was not linked into a solution folder
+* when required tools like `git` or `dotnet` are not found, a properly informative error message is displayed
+
+1.0.0: initial release
+
 ## Use it
 You use it from the command line, in the directory of your solution:
 
@@ -41,12 +56,18 @@ What will happen:
 * the folder of the project file will be renamed
 * renaming is done with `git mv` so it keeps your history intact
 * all `<ProjectReference>` tags in other projects in your solution referencing the project will be adjusted
-* if you use [paket](https://github.com/fsprojects/Paket) **as a local dotnet tool** (see [Soft Limitations](#soft-limitations)) and you agree to a prompt, `paket install` will be run
+* if you use [paket](https://github.com/fsprojects/Paket) **as a local dotnet tool** (see [Soft Limitations](#soft-limitations)), `paket install` will be run, unless you specified the flag `--no-paket`
 * all changes will be staged in git
-* if you agree to the corresponding prompt, a `dotnet build` will be run just to be totally safe that everything worked well, for very cautious/diligent people :-)
-* if you agree to another prompt, a commit of the form `Renamed <oldProjectName> to <newProjectName>` will be created automatically
+* if you specified a flag `--build`, a `dotnet build` will be run just to be totally safe that everything worked well, for very cautious/diligent people :-)
+* a commit of the form `Renamed <oldProjectName> to <newProjectName>` will be created automatically, unless you specified a flag `--no-commit`
 
 If anything goes wrong, all changes will be discarded.
+
+You can also use 
+```shell
+renamedproject help
+```
+to get help about the available flags.
 
 ## Limitations
 *renameproject* has a few limitations. Some of them are *hard limitations*, meaning they are unlikely to go away, others are *soft limitations*, meaning they exist only because I simply have not gotten round to fix them yet. I  
@@ -58,7 +79,6 @@ If *renameproject* detects uncommitted changes, added files or the like, it will
 * the tool won't adjust your namespaces - just use R# for this.
 
 ### Soft Limitations
-* the prompts (build, paket and commit) cannot be avoided using command-line flags
 * you cannot have more than one solution file or the solution file in another location than the current directory - could be turned into an optional command-line argument in the future
 * you cannot use this without git - the git-aspects could be made optional via a command-line flag in the future
 * you cannot use this with projects of other types than `csproj`, for example `fsproj`
