@@ -19,6 +19,11 @@
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubFolder ProjectInSubFolder --no-commit --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
+    "move root library to subfolder, no commit, no paket": {
+      "commandName": "Project",
+      "commandLineArgs": "LibraryInRoot subfolder/LibraryInRoot --no-commit --no-paket",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     }
   }
 }
