@@ -1,26 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageProjectUrl>https://github.com/ModernRonin/ProjectRenamer</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/ModernRonin/ProjectRenamer</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>solution, csproj, tool</PackageTags>
-    <PackAsTool>true</PackAsTool>
-	<ToolCommandName>renameproject</ToolCommandName>
-	<PackageOutputPath>./nupkg</PackageOutputPath>
-	<Description>tool for renaming C# projects</Description>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageProjectUrl>https://github.com/ModernRonin/ProjectRenamer</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/ModernRonin/ProjectRenamer</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>solution, csproj, tool</PackageTags>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>renameproject</ToolCommandName>
+		<PackageOutputPath>./nupkg</PackageOutputPath>
+		<Description>tool for renaming C# projects</Description>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ModernRonin.FluentArgumentParser" Version="1.0.0" />
-    <PackageReference Include="morelinq" Version="3.3.2" />
-    <PackageReference Include="Sln" Version="0.3.0" />
-  </ItemGroup>
-  <Import Project="release.history" />
+	<ItemGroup>
+		<PackageReference Include="ModernRonin.FluentArgumentParser" Version="1.0.0" />
+		<PackageReference Include="morelinq" Version="3.3.2" />
+		<PackageReference Include="Sln" Version="0.3.0" />
+	</ItemGroup>
+	<Import Project="release.history" />
 </Project>
