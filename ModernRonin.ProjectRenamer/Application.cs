@@ -98,6 +98,7 @@ namespace ModernRonin.ProjectRenamer
                 if (isPaketUsed && !_configuration.DontRunPaketInstall) DotNet("paket install");
             }
 
+            // TODO: fix references *inside* the moved file, too
             void replaceReferences()
             {
                 var projectFiles = Directory
@@ -123,7 +124,7 @@ namespace ModernRonin.ProjectRenamer
             {
                 Git($"mv {oldDir} {newDir}");
                 var oldPath = Path.Combine(newDir, Path.GetFileName(oldProjectPath));
-                Git($"mv {oldPath} {newProjectPath}");
+                if (oldPath != newProjectPath) Git($"mv {oldPath} {newProjectPath}");
             }
 
             void addToSolution()
