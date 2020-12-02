@@ -25,7 +25,11 @@ namespace ModernRonin.ProjectRenamer
                     break;
                 case (var helpOverview, Configuration configuration):
                     if (configuration.OldProjectName.Any(isDirectorySeparator))
-                        Error("Do not specify paths for input/'old' project names, please.");
+                    {
+                        Error(
+                            $"Do not specify paths for input/'old' project names, please.{Environment.NewLine}{Environment.NewLine}{helpOverview}");
+                    }
+
                     configuration.OldProjectName = removeProjectFileExtension(configuration.OldProjectName);
                     configuration.NewProjectName = removeProjectFileExtension(configuration.NewProjectName);
 

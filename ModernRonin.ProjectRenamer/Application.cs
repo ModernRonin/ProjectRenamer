@@ -20,18 +20,6 @@ namespace ModernRonin.ProjectRenamer
             _solutionPath = solutionPath;
         }
 
-        void EnsureGitIsClean()
-        {
-            run("update-index -q --refresh");
-            run("diff-index --quiet --cached HEAD --");
-            run("diff-files --quiet");
-            run("ls-files --exclude-standard --others");
-
-            void run(string arguments) =>
-                Tool("git", arguments,
-                    () => Error("git does not seem to be clean, check git status"));
-        }
-
         public void Run()
         {
             EnsureGitIsClean();
@@ -41,8 +29,9 @@ namespace ModernRonin.ProjectRenamer
 
             var oldDir = Path.GetDirectoryName(oldProjectPath);
             var newDir = Path.Combine(Path.GetDirectoryName(oldDir), _configuration.NewProjectName);
+            var newFileName = Path.GetFileName(_configuration.NewProjectName);
             var newProjectPath =
-                Path.Combine(newDir, $"{_configuration.NewProjectName}{Constants.ProjectFileExtension}");
+                Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
             var isPaketUsed = Directory.Exists(".paket");
 
             if (!_configuration.DontReviewSettings)
@@ -52,7 +41,7 @@ namespace ModernRonin.ProjectRenamer
                     "Please review the following settings:",
                     $"Project:                   {_configuration.OldProjectName}",
                     $"found at:                  {oldProjectPath}",
-                    $"Rename to:                 {_configuration.NewProjectName}",
+                    $"Rename to:                 {newFileName}",
                     $"at:                        {newProjectPath})",
                     $"Paket in use:              {isPaketUsed.AsText()}",
                     $"Run paket install:         {(!_configuration.DontRunPaketInstall).AsText()}",
@@ -175,6 +164,18 @@ namespace ModernRonin.ProjectRenamer
             Console.WriteLine($"{question} [Enter=Yes, any other key=No]");
             var key = Console.ReadKey();
             return key.Key == ConsoleKey.Enter;
+        }
+
+        void EnsureGitIsClean()
+        {
+            run("update-index -q --refresh");
+            run("diff-index --quiet --cached HEAD --");
+            run("diff-files --quiet");
+            run("ls-files --exclude-standard --others");
+
+            void run(string arguments) =>
+                Tool("git", arguments,
+                    () => Error("git does not seem to be clean, check git status"));
         }
     }
 }
