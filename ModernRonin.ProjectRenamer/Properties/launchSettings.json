@@ -44,6 +44,16 @@
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubfolder ./ChangedLibraryInSubfolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
+    "move subfolder library to other subfolder, no paket": {
+      "commandName": "Project",
+      "commandLineArgs": "LibraryInSubfolder ./other/LibraryInSubfolder --no-paket",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
+    "move and rename subfolder library to other subfolder, no paket": {
+      "commandName": "Project",
+      "commandLineArgs": "LibraryInSubfolder ./other/ChangedLibraryInSubfolder --no-paket",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     }
   }
 }
