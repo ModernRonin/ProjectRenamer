@@ -29,6 +29,11 @@
       "commandName": "Project",
       "commandLineArgs": "LibraryInSolutionFolder subfolder/LibraryInSolutionFolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
+    "move subfolder library to root, no paket": {
+      "commandName": "Project",
+      "commandLineArgs": "LibraryInSubfolder ./LibraryInSolutionFolder --no-paket",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     }
   }
 }

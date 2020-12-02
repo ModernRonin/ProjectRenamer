@@ -24,7 +24,7 @@ namespace ModernRonin.ProjectRenamer
                     Environment.Exit(help.IsResultOfInvalidInput ? -1 : 0);
                     break;
                 case (var helpOverview, Configuration configuration):
-                    if (configuration.OldProjectName.Any(isDirectorySeparator))
+                    if (configuration.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))
                     {
                         Error(
                             $"Do not specify paths for input/'old' project names, please.{Environment.NewLine}{Environment.NewLine}{helpOverview}");
@@ -76,9 +76,6 @@ namespace ModernRonin.ProjectRenamer
                     .WithHelp("the new desired project name, again without path or extension");
                 return (parser.HelpOverview, parser.Parse(args));
             }
-
-            bool isDirectorySeparator(char c) =>
-                c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
 
             string removeProjectFileExtension(string projectName) =>
                 projectName.EndsWith(Constants.ProjectFileExtension,

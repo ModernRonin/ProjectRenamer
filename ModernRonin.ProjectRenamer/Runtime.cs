@@ -1,9 +1,12 @@
 ﻿using System;
+using static ModernRonin.ProjectRenamer.Executor;
 
 namespace ModernRonin.ProjectRenamer
 {
     public static class Runtime
     {
+        public static void Abort() => Environment.Exit(-1);
+
         public static void Error(string msg, bool doResetGit = false)
         {
             Console.Error.WriteLine(msg);
@@ -16,8 +19,6 @@ namespace ModernRonin.ProjectRenamer
             Abort();
         }
 
-        public static void Abort() => Environment.Exit(-1);
-
-        public static void RollbackGit() => Executor.Tool("git", "reset --hard HEAD", () => { });
+        public static void RollbackGit() => Git("reset --hard HEAD", () => { });
     }
 }
