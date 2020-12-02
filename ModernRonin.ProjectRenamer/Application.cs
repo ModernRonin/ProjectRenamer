@@ -43,6 +43,7 @@ namespace ModernRonin.ProjectRenamer
                     $"found at:                  {oldProjectPath}",
                     $"Rename to:                 {newFileName}",
                     $"at:                        {newProjectPath})",
+                    $"VS Solution folder:        {solutionFolderPath ?? "none"}",
                     $"Paket in use:              {isPaketUsed.AsText()}",
                     $"Run paket install:         {(!_configuration.DontRunPaketInstall).AsText()}",
                     $"Run build after rename:    {_configuration.DoRunBuild.AsText()}",
