@@ -30,10 +30,13 @@ namespace ModernRonin.ProjectRenamer
             if (!wasFound) Error($"{_configuration.OldProjectName} cannot be found in the solution");
 
             var oldDir = Path.GetDirectoryName(oldProjectPath);
-            var newDir = Path.Combine(Path.GetDirectoryName(oldDir), _configuration.NewProjectName);
+            var newBase = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator)
+                ? CurrentDirectoryAbsolute
+                : Path.GetDirectoryName(oldDir);
+            var newDir = Path.Combine(newBase, _configuration.NewProjectName);
             var newFileName = Path.GetFileName(_configuration.NewProjectName);
             var newProjectPath =
-                Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
+                Path.GetFullPath(Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}"));
             var isPaketUsed = Directory.Exists(".paket");
 
             if (!_configuration.DontReviewSettings)
@@ -105,7 +108,7 @@ namespace ModernRonin.ProjectRenamer
                 var relativeReferences = DotNetRead($"list {project} reference")
                     .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
                     .Skip(2);
-                return relativeReferences.Select(r => Path.GetFullPath(Path.Combine(baseDirectory, r)));
+                return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
             }
 
             bool arePathsEqual(string lhs, string rhs) => Path.GetFullPath(lhs) == Path.GetFullPath(rhs);
@@ -150,8 +153,7 @@ namespace ModernRonin.ProjectRenamer
                 if (!isPaketUsed) return;
                 const string restoreTargets = @"\.paket\Paket.Restore.targets";
                 var nesting = Path.GetFullPath(newProjectPath).Count(CommonExtensions.IsDirectorySeparator) -
-                              Path.GetFullPath(Directory.GetCurrentDirectory())
-                                  .Count(CommonExtensions.IsDirectorySeparator) - 1;
+                              CurrentDirectoryAbsolute.Count(CommonExtensions.IsDirectorySeparator) - 1;
                 var paketPath = @"..\".Repeat(nesting)[..^1] + restoreTargets;
                 var lines = File.ReadAllLines(newProjectPath).Select(fixup);
                 File.WriteAllLines(newProjectPath, lines);
@@ -171,7 +173,7 @@ namespace ModernRonin.ProjectRenamer
             void gitMove()
             {
                 Git($"mv {oldDir} {newDir}");
-                var oldPath = Path.Combine(newDir, Path.GetFileName(oldProjectPath));
+                var oldPath = Path.GetFullPath(Path.Combine(newDir, Path.GetFileName(oldProjectPath)));
                 if (oldPath != newProjectPath) Git($"mv {oldPath} {newProjectPath}");
             }
 
@@ -232,5 +234,7 @@ namespace ModernRonin.ProjectRenamer
                 Git(arguments,
                     () => Error("git does not seem to be clean, check git status"));
         }
+
+        static string CurrentDirectoryAbsolute => Path.GetFullPath(Directory.GetCurrentDirectory());
     }
 }

@@ -16,5 +16,8 @@ namespace ModernRonin.ProjectRenamer
             for (var i = 0; i < count; ++i) result.Append(self);
             return result.ToString();
         }
+
+        public static string ToAbsolutePath(this string self, string baseDirectory) =>
+            Path.GetFullPath(Path.Combine(baseDirectory, self));
     }
 }
