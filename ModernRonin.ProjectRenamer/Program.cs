@@ -24,7 +24,10 @@ namespace ModernRonin.ProjectRenamer
                     Environment.Exit(help.IsResultOfInvalidInput ? -1 : 0);
                     break;
                 case (var helpOverview, Configuration configuration):
-                    if (configuration.ProjectNames.Any(isInvalidProjectName)) Error(helpOverview);
+                    if (configuration.OldProjectName.Any(isDirectorySeparator))
+                        Error("Do not specify paths for input/'old' project names, please.");
+                    configuration.OldProjectName = removeProjectFileExtension(configuration.OldProjectName);
+                    configuration.NewProjectName = removeProjectFileExtension(configuration.NewProjectName);
 
                     new Application(configuration, solutionPath).Run();
                     break;
@@ -59,19 +62,25 @@ namespace ModernRonin.ProjectRenamer
                 cfg.Parameter(c => c.OldProjectName)
                     .WithLongName("old-name")
                     .WithShortName("o")
+                    .ExpectAt(0)
                     .WithHelp(
                         "the name of the existing project - don't provide path or extension, just the name as you see it in VS.");
                 cfg.Parameter(c => c.NewProjectName)
                     .WithLongName("new-name")
                     .WithShortName("n")
+                    .ExpectAt(1)
                     .WithHelp("the new desired project name, again without path or extension");
                 return (parser.HelpOverview, parser.Parse(args));
             }
 
-            bool isInvalidProjectName(string projectName) =>
-                projectName.Contains('\\') || projectName.Contains('/') ||
-                projectName.Contains(Constants.ProjectFileExtension,
-                    StringComparison.InvariantCultureIgnoreCase);
+            bool isDirectorySeparator(char c) =>
+                c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
+
+            string removeProjectFileExtension(string projectName) =>
+                projectName.EndsWith(Constants.ProjectFileExtension,
+                    StringComparison.InvariantCultureIgnoreCase)
+                    ? projectName[..^Constants.ProjectFileExtension.Length]
+                    : projectName;
         }
     }
 }
