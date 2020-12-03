@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.Build.Construction;
 using MoreLinq.Extensions;
 using static ModernRonin.ProjectRenamer.Executor;
@@ -13,7 +12,6 @@ namespace ModernRonin.ProjectRenamer
     public class Application
     {
         readonly Configuration _configuration;
-        readonly Encoding _projectFileEncoding = Encoding.UTF8;
         readonly string _solutionPath;
 
         public Application(Configuration configuration, string solutionPath)
@@ -91,6 +89,9 @@ namespace ModernRonin.ProjectRenamer
 
             (string[] dependents, string[] dependencies) analyzeReferences()
             {
+                Log(
+                    "Analyzing references in your projects - depending on the number of projects this can take a bit...");
+
                 return (
                     allProjects().Where(doesNotEqualOldProjectPath).Where(hasReferenceToOldProject).ToArray(),
                     getReferencedProjects(oldProjectPath).ToArray());
@@ -238,6 +239,8 @@ namespace ModernRonin.ProjectRenamer
                 Git(arguments,
                     () => Error("git does not seem to be clean, check git status"));
         }
+
+        void Log(string message) => Console.WriteLine(message);
 
         static string CurrentDirectoryAbsolute => Path.GetFullPath(Directory.GetCurrentDirectory());
     }
