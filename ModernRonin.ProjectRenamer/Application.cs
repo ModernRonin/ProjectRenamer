@@ -117,8 +117,11 @@ namespace ModernRonin.ProjectRenamer
             {
                 if (!_configuration.DontCreateCommit)
                 {
-                    var arguments =
-                        $"commit -m \"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}\"";
+                    var wasMove = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator);
+                    var msg = wasMove
+                        ? $"Moved {oldProjectPath.ToRelativePath(CurrentDirectoryAbsolute)} to {newProjectPath.ToRelativePath(CurrentDirectoryAbsolute)}"
+                        : $"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}";
+                    var arguments = $"commit -m \"{msg}\"";
                     Git(arguments,
                         () => { Console.Error.WriteLine($"'git {arguments}' failed"); });
                 }
