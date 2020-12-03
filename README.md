@@ -107,7 +107,7 @@ In some situations, for example if your repository contains a separate solution 
 ### Help
 For details about available arguments and flags/options and some example calls, you can also use 
 ```shell
-renamedproject help
+renameproject help
 ```
 to get help about the available flags.
 
