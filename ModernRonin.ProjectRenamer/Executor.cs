@@ -22,6 +22,9 @@ namespace ModernRonin.ProjectRenamer
         public static void Git(string arguments, Action onNonZeroExitCode) =>
             Tool(ToolGit, arguments, onNonZeroExitCode);
 
+        public static string GitRead(string arguments) =>
+            ToolRead(ToolGit, arguments, () => StandardErrorHandler(ToolGit, arguments));
+
         static void DoWithTool(string tool,
             string arguments,
             Action onNonZeroExitCode,

@@ -33,12 +33,11 @@ namespace ModernRonin.ProjectRenamer
             var newBase = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator)
                 ? CurrentDirectoryAbsolute
                 : Path.GetDirectoryName(oldDir);
-            var newDir = Path.Combine(newBase, _configuration.NewProjectName);
+            var newDir = _configuration.NewProjectName.ToAbsolutePath(newBase);
             var newFileName = Path.GetFileName(_configuration.NewProjectName);
-            var newProjectPath =
-                Path.GetFullPath(Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}"));
+            var newProjectPath = Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
             var isPaketUsed = Directory.Exists(".paket");
-
+            var gitVersion = GitRead("--version");
             if (!_configuration.DontReviewSettings)
             {
                 var lines = new[]
@@ -53,6 +52,7 @@ namespace ModernRonin.ProjectRenamer
                     $"Run paket install:         {(!_configuration.DontRunPaketInstall).AsText()}",
                     $"Run build after rename:    {_configuration.DoRunBuild.AsText()}",
                     $"Create automatic commit:   {(!_configuration.DontCreateCommit).AsText()}",
+                    $"Git version:               {gitVersion}",
                     "-----------------------------------------------",
                     "Do you want to continue with the rename operation?"
                 };
@@ -172,8 +172,9 @@ namespace ModernRonin.ProjectRenamer
 
             void gitMove()
             {
+                Directory.CreateDirectory(Path.GetDirectoryName(newDir));
                 Git($"mv {oldDir} {newDir}");
-                var oldPath = Path.GetFullPath(Path.Combine(newDir, Path.GetFileName(oldProjectPath)));
+                var oldPath = Path.GetFileName(oldProjectPath).ToAbsolutePath(newDir);
                 if (oldPath != newProjectPath) Git($"mv {oldPath} {newProjectPath}");
             }
 
