@@ -46,6 +46,7 @@ namespace ModernRonin.ProjectRenamer
                     $"Rename to:                 {newFileName}",
                     $"at:                        {newProjectPath})",
                     $"VS Solution folder:        {solutionFolderPath ?? "none"}",
+                    $"exclude:                   {_configuration.ExcludedDirectory}",
                     $"Paket in use:              {isPaketUsed.AsText()}",
                     $"Run paket install:         {(!_configuration.DontRunPaketInstall).AsText()}",
                     $"Run build after rename:    {_configuration.DoRunBuild.AsText()}",
@@ -215,10 +216,21 @@ namespace ModernRonin.ProjectRenamer
                 }
             }
 
-            string[] allProjects() =>
-                Directory
-                    .EnumerateFiles(".", $"*{Constants.ProjectFileExtension}", SearchOption.AllDirectories)
-                    .ToArray();
+            string[] allProjects()
+            {
+                var all = filesIn(".");
+                var excluded = string.IsNullOrEmpty(_configuration.ExcludedDirectory)
+                    ? Enumerable.Empty<string>()
+                    : filesIn($@".\{_configuration.ExcludedDirectory}");
+
+                return all.Except(excluded).ToArray();
+
+                string[] filesIn(string directory) =>
+                    Directory
+                        .EnumerateFiles(directory, $"*{Constants.ProjectFileExtension}",
+                            SearchOption.AllDirectories)
+                        .ToArray();
+            }
         }
 
         bool DoesUserAgree(string question)

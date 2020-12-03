@@ -6,6 +6,7 @@
         public bool DontReviewSettings { get; set; }
         public bool DontRunPaketInstall { get; set; }
         public bool DoRunBuild { get; set; }
+        public string ExcludedDirectory { get; set; } = string.Empty;
         public string NewProjectName { get; set; }
         public string OldProjectName { get; set; }
     }

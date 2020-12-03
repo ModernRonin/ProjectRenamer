@@ -74,6 +74,13 @@ namespace ModernRonin.ProjectRenamer
                     .WithShortName("n")
                     .ExpectAt(1)
                     .WithHelp("the new desired project name, again without path or extension");
+                cfg.Parameter(c => c.ExcludedDirectory)
+                    .MakeOptional()
+                    .ExpectAt(2)
+                    .WithLongName("exclude")
+                    .WithShortName("e")
+                    .WithHelp(
+                        "exclude this directory from project reference updates; must be a relative path to the current directory");
                 return (parser.HelpOverview, parser.Parse(args));
             }
 
