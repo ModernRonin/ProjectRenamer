@@ -8,6 +8,7 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>solution, csproj, tool</PackageTags>
 		<PackAsTool>true</PackAsTool>
+		<PackageLicenseExpression>CC-BY-SA-4.0</PackageLicenseExpression>
 		<ToolCommandName>renameproject</ToolCommandName>
 		<PackageOutputPath>./nupkg</PackageOutputPath>
 		<Description>tool for renaming C# projects</Description>
