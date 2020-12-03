@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.Build.Construction;
+using MoreLinq.Extensions;
 using static ModernRonin.ProjectRenamer.Executor;
 using static ModernRonin.ProjectRenamer.Runtime;
 
@@ -11,25 +12,12 @@ namespace ModernRonin.ProjectRenamer
     public class Application
     {
         readonly Configuration _configuration;
-        readonly Encoding _projectFileEncoding = Encoding.UTF8;
         readonly string _solutionPath;
 
         public Application(Configuration configuration, string solutionPath)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
-        }
-
-        void EnsureGitIsClean()
-        {
-            run("update-index -q --refresh");
-            run("diff-index --quiet --cached HEAD --");
-            run("diff-files --quiet");
-            run("ls-files --exclude-standard --others");
-
-            void run(string arguments) =>
-                Tool("git", arguments,
-                    () => Error("git does not seem to be clean, check git status"));
         }
 
         public void Run()
@@ -40,11 +28,14 @@ namespace ModernRonin.ProjectRenamer
             if (!wasFound) Error($"{_configuration.OldProjectName} cannot be found in the solution");
 
             var oldDir = Path.GetDirectoryName(oldProjectPath);
-            var newDir = Path.Combine(Path.GetDirectoryName(oldDir), _configuration.NewProjectName);
-            var newProjectPath =
-                Path.Combine(newDir, $"{_configuration.NewProjectName}{Constants.ProjectFileExtension}");
+            var newBase = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator)
+                ? CurrentDirectoryAbsolute
+                : Path.GetDirectoryName(oldDir);
+            var newDir = _configuration.NewProjectName.ToAbsolutePath(newBase);
+            var newFileName = Path.GetFileName(_configuration.NewProjectName);
+            var newProjectPath = Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
             var isPaketUsed = Directory.Exists(".paket");
-
+            var gitVersion = GitRead("--version");
             if (!_configuration.DontReviewSettings)
             {
                 var lines = new[]
@@ -52,34 +43,88 @@ namespace ModernRonin.ProjectRenamer
                     "Please review the following settings:",
                     $"Project:                   {_configuration.OldProjectName}",
                     $"found at:                  {oldProjectPath}",
-                    $"Rename to:                 {_configuration.NewProjectName}",
+                    $"Rename to:                 {newFileName}",
                     $"at:                        {newProjectPath})",
+                    $"VS Solution folder:        {solutionFolderPath ?? "none"}",
+                    $"exclude:                   {_configuration.ExcludedDirectory}",
                     $"Paket in use:              {isPaketUsed.AsText()}",
                     $"Run paket install:         {(!_configuration.DontRunPaketInstall).AsText()}",
                     $"Run build after rename:    {_configuration.DoRunBuild.AsText()}",
                     $"Create automatic commit:   {(!_configuration.DontCreateCommit).AsText()}",
+                    $"Git version:               {gitVersion}",
                     "-----------------------------------------------",
                     "Do you want to continue with the rename operation?"
                 };
                 if (!DoesUserAgree(string.Join(Environment.NewLine, lines))) Abort();
             }
 
+            var (dependents, dependencies) = analyzeReferences();
             removeFromSolution();
+            removeOldReferences();
             gitMove();
-            replaceReferences();
+            updatePaketReference();
+            addNewReferences();
             addToSolution();
             updatePaket();
             stageAllChanges();
             build();
             commit();
 
+            void addNewReferences()
+            {
+                dependents.ForEach(p => addReference(p, newProjectPath));
+                dependencies.ForEach(d => addReference(newProjectPath, d));
+
+                void addReference(string project, string reference) =>
+                    DotNet($"add {project} reference {reference}");
+            }
+
+            void removeOldReferences()
+            {
+                dependents.ForEach(p => removeReference(p, oldProjectPath));
+                dependencies.ForEach(d => removeReference(oldProjectPath, d));
+
+                void removeReference(string project, string reference) =>
+                    DotNet($"remove {project} reference {reference}");
+            }
+
+            (string[] dependents, string[] dependencies) analyzeReferences()
+            {
+                Log(
+                    "Analyzing references in your projects - depending on the number of projects this can take a bit...");
+
+                return (
+                    allProjects().Where(doesNotEqualOldProjectPath).Where(hasReferenceToOldProject).ToArray(),
+                    getReferencedProjects(oldProjectPath).ToArray());
+
+                bool hasReferenceToOldProject(string p) =>
+                    getReferencedProjects(p).Any(doesEqualOldProjectPath);
+            }
+
+            bool doesNotEqualOldProjectPath(string what) => !doesEqualOldProjectPath(what);
+            bool doesEqualOldProjectPath(string what) => arePathsEqual(what, oldProjectPath);
+
+            IEnumerable<string> getReferencedProjects(string project)
+            {
+                var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
+                var relativeReferences = DotNetRead($"list {project} reference")
+                    .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+                    .Skip(2);
+                return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
+            }
+
+            bool arePathsEqual(string lhs, string rhs) => Path.GetFullPath(lhs) == Path.GetFullPath(rhs);
+
             void commit()
             {
                 if (!_configuration.DontCreateCommit)
                 {
-                    var arguments =
-                        $"commit -m \"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}\"";
-                    Tool("git", arguments,
+                    var wasMove = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator);
+                    var msg = wasMove
+                        ? $"Moved {oldProjectPath.ToRelativePath(CurrentDirectoryAbsolute)} to {newProjectPath.ToRelativePath(CurrentDirectoryAbsolute)}"
+                        : $"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}";
+                    var arguments = $"commit -m \"{msg}\"";
+                    Git(arguments,
                         () => { Console.Error.WriteLine($"'git {arguments}' failed"); });
                 }
             }
@@ -88,7 +133,7 @@ namespace ModernRonin.ProjectRenamer
             {
                 if (_configuration.DoRunBuild)
                 {
-                    Tool("dotnet", "build", () =>
+                    DotNet("build", () =>
                     {
                         if (DoesUserAgree(
                             "dotnet build returned an error or warning - do you want to rollback all changes?")
@@ -108,39 +153,41 @@ namespace ModernRonin.ProjectRenamer
                 if (isPaketUsed && !_configuration.DontRunPaketInstall) DotNet("paket install");
             }
 
-            void replaceReferences()
+            void updatePaketReference()
             {
-                var projectFiles = Directory
-                    .EnumerateFiles(".", $"*{Constants.ProjectFileExtension}", SearchOption.AllDirectories)
-                    .ToList();
-                var (oldReference, newReference) =
-                    (searchPattern(_configuration.OldProjectName),
-                        searchPattern(_configuration.NewProjectName));
-                projectFiles.ForEach(replaceIn);
+                if (!isPaketUsed) return;
+                const string restoreTargets = @"\.paket\Paket.Restore.targets";
+                var nesting = Path.GetFullPath(newProjectPath).Count(CommonExtensions.IsDirectorySeparator) -
+                              CurrentDirectoryAbsolute.Count(CommonExtensions.IsDirectorySeparator) - 1;
+                var paketPath = @"..\".Repeat(nesting)[..^1] + restoreTargets;
+                var lines = File.ReadAllLines(newProjectPath).Select(fixup);
+                File.WriteAllLines(newProjectPath, lines);
 
-                void replaceIn(string projectFile)
+                string fixup(string line) =>
+                    isPaketReference(line) ? $"<Import Project=\"{paketPath}\" />" : line;
+
+                bool isPaketReference(string line)
                 {
-                    var contents = File.ReadAllText(projectFile, _projectFileEncoding);
-                    contents = contents.Replace(oldReference, newReference);
-                    File.WriteAllText(projectFile, contents, _projectFileEncoding);
+                    var trimmed = line.Trim();
+                    if (!trimmed.StartsWith("<Import Project")) return false;
+                    if (!trimmed.Contains(restoreTargets)) return false;
+                    return true;
                 }
-
-                string searchPattern(string name) =>
-                    Path.Combine(name, name) + Constants.ProjectFileExtension;
             }
 
             void gitMove()
             {
+                Directory.CreateDirectory(Path.GetDirectoryName(newDir));
                 Git($"mv {oldDir} {newDir}");
-                var oldPath = Path.Combine(newDir, Path.GetFileName(oldProjectPath));
-                Git($"mv {oldPath} {newProjectPath}");
+                var oldPath = Path.GetFileName(oldProjectPath).ToAbsolutePath(newDir);
+                if (oldPath != newProjectPath) Git($"mv {oldPath} {newProjectPath}");
             }
 
             void addToSolution()
             {
                 var solutionFolderArgument = string.IsNullOrWhiteSpace(solutionFolderPath)
                     ? string.Empty
-                    : $"-s {solutionFolderPath}";
+                    : $"-s \"{solutionFolderPath}\"";
                 DotNet($"sln add {solutionFolderArgument} {newProjectPath}");
             }
 
@@ -168,6 +215,22 @@ namespace ModernRonin.ProjectRenamer
                     return $"{parentPath}/{p.ProjectName}";
                 }
             }
+
+            string[] allProjects()
+            {
+                var all = filesIn(".");
+                var excluded = string.IsNullOrEmpty(_configuration.ExcludedDirectory)
+                    ? Enumerable.Empty<string>()
+                    : filesIn($@".\{_configuration.ExcludedDirectory}");
+
+                return all.Except(excluded).ToArray();
+
+                string[] filesIn(string directory) =>
+                    Directory
+                        .EnumerateFiles(directory, $"*{Constants.ProjectFileExtension}",
+                            SearchOption.AllDirectories)
+                        .ToArray();
+            }
         }
 
         bool DoesUserAgree(string question)
@@ -176,5 +239,21 @@ namespace ModernRonin.ProjectRenamer
             var key = Console.ReadKey();
             return key.Key == ConsoleKey.Enter;
         }
+
+        void EnsureGitIsClean()
+        {
+            run("update-index -q --refresh");
+            run("diff-index --quiet --cached HEAD --");
+            run("diff-files --quiet");
+            run("ls-files --exclude-standard --others");
+
+            void run(string arguments) =>
+                Git(arguments,
+                    () => Error("git does not seem to be clean, check git status"));
+        }
+
+        void Log(string message) => Console.WriteLine(message);
+
+        static string CurrentDirectoryAbsolute => Path.GetFullPath(Directory.GetCurrentDirectory());
     }
 }
