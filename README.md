@@ -2,13 +2,17 @@
 [![NuGet](https://img.shields.io/nuget/v/ModernRonin.ProjectRenamer.svg)](https://www.nuget.org/packages/ModernRonin.ProjectRenamer/)
 [![NuGet](https://img.shields.io/nuget/dt/ModernRonin.ProjectRenamer.svg)](https://www.nuget.org/packages/ModernRonin.ProjectRenamer)
 ## Summary
-How often have you felt the need to rename a C# project? If you have come here, then you know that the most important existing IDE for C#, Visual Studio, does not really support this scenario very well.
+How often have you felt the need to rename or move a C# project? If you have come here, then you know that the most important existing IDE for C#, Visual Studio,
+does not really support this scenario very well.
 
 This tool takes care of this for you, provided your use-case follows a set of fairly common practices:
 * you use **git** as a repository and have `git`(the executable) on your PATH
 * your `csproj` files have the same name as the folder in which they reside together with accompanying source code
 * you don't have more than one solution file (`.sln`) in one directory
-* you have **dotnetcore 3.1** or above
+* you have **dotnetcore 3.1** or above (note that once net6 is out, this tool will be switched to require net5; by that time, I assume widespread enough adoption)
+* your solution does not contain nested solution folders - the tool currently has an issue with that and will fail; until I find the time to fix that, the 
+workaround is simply to move the nested solution folder to top-level via VS, run the tool, and then move the solution folder back;seeing as this is two 
+simple drag-and-drops that only change the solution file, I hope this is acceptable.
 
 
 ## Get it
@@ -29,10 +33,20 @@ dotnet tool update --global ModernRonin.ProjectRenamer
 ```
 
 ### Release History
-2.0.0: all behavior where the tool prompted you before interactively is now controlled via commandline arguments
+2.1.0:
+* feature: you can move projects to different folders now instead of just renaming them
+* feature: you can specify a directory to exclude from project reference updates
+* feature: the detected VS solution folder is displayed in review
+* feature: the detected git version is displayed in review
+* bugfix: when called with unnamed arguments, old project name now is understood to come before new project name (before it was the wrong way round)
+* bugfix: VS solution folders containing spaces don't crash the tool anymore
+
+2.0.0: 
+* breaking change: instead of asking the user interactively, behavior is now controlled via commandline switches
+
 1.0.1: 
-* fixed problem when target project was not linked into a solution folder
-* when required tools like `git` or `dotnet` are not found, a properly informative error message is displayed
+* bugfix: if a project is not in a solution folder, the tools works now, too
+* bugfix: if a required tool like git cannot be found, give a proper error message
 
 1.0.0: initial release
 
@@ -46,6 +60,7 @@ renameproject <oldProjectName> <newProjectName>
 The project names include neither path nor extension (.csproj). *renameproject* will find your project just by the name, no matter how deeply it might be hidden in your directory structure.
 It must be linked into the solution, though.
 
+### Simple rename
 Example usage:
 ```shell
 renameproject ModernRonin.ProjectRenamer ModernRonin.RenameProject
@@ -63,7 +78,34 @@ What will happen:
 
 If anything goes wrong, all changes will be discarded.
 
-You can also use 
+### Move
+Since version 2.1.0, the tool also allows you to move projects. To do this, you prefix the new name with a relative folder. 
+
+Here's an example:
+```shell
+renameproject ModernRonin.ProjectRenamer src/ModernRonin.ProjectRenamer
+```
+
+If you want to move a project from somewhere in a subfolder into the root of the solution, prefix the new name with `./`.
+
+For example, to revert the change from the previous example you'd do:
+```shell
+renameproject ModernRonin.ProjectRenamer ./ModernRonin.ProjectRenamer
+```
+
+### Rename and Move combined
+You can also move and rename in one operation like
+```shell
+renameproject ModernRonin.ProjectRenamer src/ModernRonin.RenameProject
+```
+
+>However, there is a **caveat**: git interprets this not as rename, but as delete and create and thus you will loose the history of your project file. Thus, I recommend to do such things in two passes.
+
+### Exclude Directory
+In some situations, for example if your repository contains a separate solution with separate projects in a subdirectory, you want to exclude a directory completely from being looked at by the project reference update mechanism. In that case, you can specify that directory with the optional `--exclude` argument.
+
+### Help
+For details about available arguments and flags/options and some example calls, you can also use 
 ```shell
 renamedproject help
 ```
@@ -77,17 +119,16 @@ do not really have a lot of free time to spend on this, but am **totally open to
 * Your local repository copy must be clean. This is to ensure that in case we have to discard changes, we don't discard anything you wouldn't want discarded, by accident.
 If *renameproject* detects uncommitted changes, added files or the like, it will abort its operation.
 * the tool won't adjust your namespaces - just use R# for this.
+* I have not tested this with old-style, pre-SDK `csproj` projects and I very likely never will
 
 ### Soft Limitations
 * you cannot have more than one solution file or the solution file in another location than the current directory - could be turned into an optional command-line argument in the future
 * you cannot use this without git - the git-aspects could be made optional via a command-line flag in the future
 * you cannot use this with projects of other types than `csproj`, for example `fsproj`
-* I have not tested this with old-style, pre-SDK `csproj` projects
 * the detection of whether the local repo is clean might throw false positives in some cases
 * you cannot use wildcards, like `renameproject ModernRonin.CommonServices.* ModernRonin.Common.Services.* ` - this would be very handy for the wide-spread convention to have an accompanying ` *.Tests ` project
 * you need to manually update the tool with `dotnet tool update -g ModernRonin.ProjectRenamer` and you need to come here to check whether there is a new version (or check nuget)
-* if you use paket as a global tool instead of as a local tool, paket support will fail currently - you should really switch to using paket as a local tool, if you can. but on the other hand, in the future *renameproject* 
-might just become smarter about this using a combination of checking whether there is `paket` in the `PATH` and the presence of `dotnet-tools.json` and whether it contains an entry for paket
+* if you use paket as a global tool instead of as a local tool, paket support will fail currently - you should really switch to using paket as a local tool, if you can. but on the other hand, in the future *renameproject* might just become smarter about this using a combination of checking whether there is `paket` in the `PATH` and the presence of `dotnet-tools.json` and whether it contains an entry for paket
 
 
 ## License
