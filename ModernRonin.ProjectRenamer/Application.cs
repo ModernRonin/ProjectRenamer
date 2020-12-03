@@ -187,7 +187,7 @@ namespace ModernRonin.ProjectRenamer
             {
                 var solutionFolderArgument = string.IsNullOrWhiteSpace(solutionFolderPath)
                     ? string.Empty
-                    : $"-s {solutionFolderPath}";
+                    : $"-s \"{solutionFolderPath}\"";
                 DotNet($"sln add {solutionFolderArgument} {newProjectPath}");
             }
 
