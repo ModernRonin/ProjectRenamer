@@ -7,6 +7,8 @@ namespace ModernRonin.ProjectRenamer
     {
         public static string AsText(this bool self) => self ? "yes" : "no";
 
+        public static string Escape(this string self) => $"\"{self}\"";
+
         public static bool IsDirectorySeparator(this char self) =>
             self == Path.DirectorySeparatorChar || self == Path.AltDirectorySeparatorChar;
 

@@ -76,7 +76,7 @@ namespace ModernRonin.ProjectRenamer
                 dependencies.ForEach(d => addReference(newProjectPath, d));
 
                 void addReference(string project, string reference) =>
-                    DotNet($"add {project} reference {reference}");
+                    projectReferenceCommand("add", project, reference);
             }
 
             void removeOldReferences()
@@ -85,8 +85,11 @@ namespace ModernRonin.ProjectRenamer
                 dependencies.ForEach(d => removeReference(oldProjectPath, d));
 
                 void removeReference(string project, string reference) =>
-                    DotNet($"remove {project} reference {reference}");
+                    projectReferenceCommand("remove", project, reference);
             }
+
+            void projectReferenceCommand(string command, string project, string reference) =>
+                DotNet($"{command} {project.Escape()} reference {reference.Escape()}");
 
             (string[] dependents, string[] dependencies) analyzeReferences()
             {
@@ -188,10 +191,13 @@ namespace ModernRonin.ProjectRenamer
                 var solutionFolderArgument = string.IsNullOrWhiteSpace(solutionFolderPath)
                     ? string.Empty
                     : $"-s \"{solutionFolderPath}\"";
-                DotNet($"sln add {solutionFolderArgument} {newProjectPath}");
+                solutionCommand($"add {solutionFolderArgument}", newProjectPath);
             }
 
-            void removeFromSolution() => DotNet($"sln remove {oldProjectPath}");
+            void removeFromSolution() => solutionCommand("remove", oldProjectPath);
+
+            void solutionCommand(string command, string projectPath) =>
+                DotNet($"sln {command} {projectPath.Escape()}");
 
             (bool wasFound, string projectPath, string solutionFolder) findProject()
             {
