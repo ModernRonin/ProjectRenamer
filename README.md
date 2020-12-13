@@ -33,6 +33,9 @@ dotnet tool update --global ModernRonin.ProjectRenamer
 ```
 
 ### Release History
+2.1.1:
+* bugfix: projects in paths containing whitespace no longer crash the dotnet commands; thanks to @NicolasRiou for reporting the bug
+
 2.1.0:
 * feature: you can move projects to different folders now instead of just renaming them
 * feature: you can specify a directory to exclude from project reference updates
