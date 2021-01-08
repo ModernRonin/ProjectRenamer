@@ -110,7 +110,7 @@ namespace ModernRonin.ProjectRenamer
             IEnumerable<string> getReferencedProjects(string project)
             {
                 var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
-                var relativeReferences = DotNetRead($"list {project} reference")
+                var relativeReferences = DotNetRead($"list {project.Escape()} reference")
                     .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
                     .Skip(2);
                 return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
