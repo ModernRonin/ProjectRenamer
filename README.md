@@ -35,6 +35,9 @@ dotnet tool update --global ModernRonin.ProjectRenamer
 When I publish a new version, I always post at [my blog](https://modernronin.github.io/) under the [renameproject tag](https://modernronin.github.io/tags/renameproject/), aside from updating this readme here.
 
 ### Release History
+2.1.2:
+* bugfix: fixed another whitespace related scenario; thanks to @sejohnson-at-griffis for reporting the bug
+
 2.1.1:
 * bugfix: projects in paths containing whitespace no longer crash the dotnet commands; thanks to [@NicolasRiou](https://github.com/NicolasRiou) for reporting the bug
 
