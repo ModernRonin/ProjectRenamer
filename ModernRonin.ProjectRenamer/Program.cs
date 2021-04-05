@@ -10,9 +10,10 @@ namespace ModernRonin.ProjectRenamer
             var container = WireUp();
             var setup = container.Resolve<IConfigurationSetup>();
             var (configuration, solutionPath) = setup.Get(args);
-            if (configuration != default)
-                container.Resolve<Func<Configuration, string, Application>>()(configuration, solutionPath)
-                    .Run();
+            if (configuration == default) return;
+
+            container.Resolve<Func<Configuration, string, Application>>()(configuration, solutionPath)
+                .Run();
         }
 
         static IContainer WireUp()
@@ -25,8 +26,7 @@ namespace ModernRonin.ProjectRenamer
             builder.RegisterType<ConfigurationSetup>().AsImplementedInterfaces();
             builder.RegisterType<Application>().AsSelf();
 
-            var container = builder.Build();
-            return container;
+            return builder.Build();
         }
     }
 }
