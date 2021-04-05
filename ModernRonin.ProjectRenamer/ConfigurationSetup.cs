@@ -11,21 +11,23 @@ namespace ModernRonin.ProjectRenamer
     {
         readonly ILogger _console;
         readonly IErrorHandler _errors;
-        readonly IExecutor _executor;
+        readonly IFilesystem _filesystem;
         readonly IRuntime _runtime;
 
-        public ConfigurationSetup(IExecutor executor, ILogger console, IRuntime runtime, IErrorHandler errors)
+        public ConfigurationSetup(ILogger console,
+            IRuntime runtime,
+            IErrorHandler errors,
+            IFilesystem filesystem)
         {
-            _executor = executor;
             _console = console;
             _runtime = runtime;
             _errors = errors;
+            _filesystem = filesystem;
         }
 
         public (Configuration configuration, string solutionPath) Get(string[] commandLineArguments)
         {
-            var solutionFiles =
-                Directory.EnumerateFiles(".", "*.sln", SearchOption.TopDirectoryOnly).ToArray();
+            var solutionFiles = _filesystem.FindSolutionFiles(".", false);
             if (1 != solutionFiles.Length)
                 _errors.Handle("Needs to be run from a directory with exactly one *.sln file in it.");
             var solutionPath = Path.GetFullPath(solutionFiles.First());

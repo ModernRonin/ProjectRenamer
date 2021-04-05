@@ -13,6 +13,7 @@ namespace ModernRonin.ProjectRenamer
             builder.RegisterType<ConfigurationSetup>().AsImplementedInterfaces();
             builder.RegisterType<Git>().AsImplementedInterfaces();
             builder.RegisterType<Dotnet>().AsImplementedInterfaces();
+            builder.RegisterType<Filesystem>().AsImplementedInterfaces();
             builder.RegisterType<Application>().AsSelf();
         }
     }
