@@ -1,24 +1,53 @@
 ﻿using System;
-using static ModernRonin.ProjectRenamer.Executor;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 
 namespace ModernRonin.ProjectRenamer
 {
-    public static class Runtime
+    public class Runtime : IRuntime
     {
-        public static void Abort() => Environment.Exit(-1);
+        readonly ILogger _logger;
 
-        public static void Error(string msg, bool doResetGit = false)
+        public Runtime(ILogger logger) => _logger = logger;
+
+        public void Abort(int exitCode = -1) => Environment.Exit(exitCode);
+
+        public void DoWithTool(string tool,
+            string arguments,
+            Action onNonZeroExitCode,
+            Action<ProcessStartInfo> configure,
+            Action<Process> onSuccess)
         {
-            Console.Error.WriteLine(msg);
-            if (doResetGit)
+            var psi = new ProcessStartInfo
             {
-                Console.Error.WriteLine("...running git reset to undo any changes...");
-                RollbackGit();
+                FileName = tool,
+                Arguments = arguments,
+                UseShellExecute = false,
+                CreateNoWindow = false
+            };
+            configure(psi);
+            try
+            {
+                var process = Process.Start(psi);
+                process.WaitForExit();
+                if (process.ExitCode != 0) onNonZeroExitCode();
+                else onSuccess(process);
+            }
+            catch (Win32Exception)
+            {
+                onProcessStartProblem();
+            }
+            catch (FileNotFoundException)
+            {
+                onProcessStartProblem();
             }
 
-            Abort();
+            void onProcessStartProblem()
+            {
+                _logger.Error($"{tool} could not be found - make sure it's on your PATH.");
+                onNonZeroExitCode();
+            }
         }
-
-        public static void RollbackGit() => Git("reset --hard HEAD", () => { });
     }
 }

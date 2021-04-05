@@ -4,20 +4,31 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Construction;
 using MoreLinq.Extensions;
-using static ModernRonin.ProjectRenamer.Executor;
-using static ModernRonin.ProjectRenamer.Runtime;
 
 namespace ModernRonin.ProjectRenamer
 {
     public class Application
     {
         readonly Configuration _configuration;
+        readonly IExecutor _executor;
+        readonly IInput _input;
+        readonly ILogger _logger;
+        readonly IRuntime _runtime;
         readonly string _solutionPath;
 
-        public Application(Configuration configuration, string solutionPath)
+        public Application(Configuration configuration,
+            string solutionPath,
+            IExecutor executor,
+            IRuntime runtime,
+            ILogger logger,
+            IInput input)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
+            _executor = executor;
+            _runtime = runtime;
+            _logger = logger;
+            _input = input;
         }
 
         public void Run()
@@ -25,7 +36,8 @@ namespace ModernRonin.ProjectRenamer
             EnsureGitIsClean();
 
             var (wasFound, oldProjectPath, solutionFolderPath) = findProject();
-            if (!wasFound) Error($"{_configuration.OldProjectName} cannot be found in the solution");
+            if (!wasFound)
+                _executor.Error($"{_configuration.OldProjectName} cannot be found in the solution");
 
             var oldDir = Path.GetDirectoryName(oldProjectPath);
             var newBase = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator)
@@ -35,7 +47,7 @@ namespace ModernRonin.ProjectRenamer
             var newFileName = Path.GetFileName(_configuration.NewProjectName);
             var newProjectPath = Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
             var isPaketUsed = Directory.Exists(".paket");
-            var gitVersion = GitRead("--version");
+            var gitVersion = _executor.GitRead("--version");
             if (!_configuration.DontReviewSettings)
             {
                 var lines = new[]
@@ -55,7 +67,7 @@ namespace ModernRonin.ProjectRenamer
                     "-----------------------------------------------",
                     "Do you want to continue with the rename operation?"
                 };
-                if (!DoesUserAgree(string.Join(Environment.NewLine, lines))) Abort();
+                if (!_input.AskUser(string.Join(Environment.NewLine, lines))) _runtime.Abort();
             }
 
             var (dependents, dependencies) = analyzeReferences();
@@ -89,11 +101,12 @@ namespace ModernRonin.ProjectRenamer
             }
 
             void projectReferenceCommand(string command, string project, string reference) =>
-                DotNet($"{command} {project.Escape()} reference {reference.Escape()}");
+                _executor.DotNet(
+                    $"{command} {project.EscapeForShell()} reference {reference.EscapeForShell()}");
 
             (string[] dependents, string[] dependencies) analyzeReferences()
             {
-                Log(
+                _logger.Info(
                     "Analyzing references in your projects - depending on the number of projects this can take a bit...");
 
                 return (
@@ -110,7 +123,7 @@ namespace ModernRonin.ProjectRenamer
             IEnumerable<string> getReferencedProjects(string project)
             {
                 var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
-                var relativeReferences = DotNetRead($"list {project.Escape()} reference")
+                var relativeReferences = _executor.DotNetRead($"list {project.EscapeForShell()} reference")
                     .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
                     .Skip(2);
                 return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
@@ -127,8 +140,8 @@ namespace ModernRonin.ProjectRenamer
                         ? $"Moved {oldProjectPath.ToRelativePath(CurrentDirectoryAbsolute)} to {newProjectPath.ToRelativePath(CurrentDirectoryAbsolute)}"
                         : $"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}";
                     var arguments = $"commit -m \"{msg}\"";
-                    Git(arguments,
-                        () => { Console.Error.WriteLine($"'git {arguments}' failed"); });
+                    _executor.Git(arguments,
+                        () => { _logger.Error($"'git {arguments}' failed"); });
                 }
             }
 
@@ -136,24 +149,24 @@ namespace ModernRonin.ProjectRenamer
             {
                 if (_configuration.DoRunBuild)
                 {
-                    DotNet("build", () =>
+                    _executor.DotNet("build", () =>
                     {
-                        if (DoesUserAgree(
+                        if (_input.AskUser(
                             "dotnet build returned an error or warning - do you want to rollback all changes?")
                         )
                         {
-                            RollbackGit();
-                            Abort();
+                            _executor.RollbackGit();
+                            _runtime.Abort();
                         }
                     });
                 }
             }
 
-            void stageAllChanges() => Git("add .");
+            void stageAllChanges() => _executor.Git("add .");
 
             void updatePaket()
             {
-                if (isPaketUsed && !_configuration.DontRunPaketInstall) DotNet("paket install");
+                if (isPaketUsed && !_configuration.DontRunPaketInstall) _executor.DotNet("paket install");
             }
 
             void updatePaketReference()
@@ -181,9 +194,9 @@ namespace ModernRonin.ProjectRenamer
             void gitMove()
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(newDir));
-                Git($"mv {oldDir} {newDir}");
+                _executor.Git($"mv {oldDir} {newDir}");
                 var oldPath = Path.GetFileName(oldProjectPath).ToAbsolutePath(newDir);
-                if (oldPath != newProjectPath) Git($"mv {oldPath} {newProjectPath}");
+                if (oldPath != newProjectPath) _executor.Git($"mv {oldPath} {newProjectPath}");
             }
 
             void addToSolution()
@@ -197,7 +210,7 @@ namespace ModernRonin.ProjectRenamer
             void removeFromSolution() => solutionCommand("remove", oldProjectPath);
 
             void solutionCommand(string command, string projectPath) =>
-                DotNet($"sln {command} {projectPath.Escape()}");
+                _executor.DotNet($"sln {command} {projectPath.EscapeForShell()}");
 
             (bool wasFound, string projectPath, string solutionFolder) findProject()
             {
@@ -239,13 +252,6 @@ namespace ModernRonin.ProjectRenamer
             }
         }
 
-        bool DoesUserAgree(string question)
-        {
-            Console.WriteLine($"{question} [Enter=Yes, any other key=No]");
-            var key = Console.ReadKey();
-            return key.Key == ConsoleKey.Enter;
-        }
-
         void EnsureGitIsClean()
         {
             run("update-index -q --refresh");
@@ -254,11 +260,9 @@ namespace ModernRonin.ProjectRenamer
             run("ls-files --exclude-standard --others");
 
             void run(string arguments) =>
-                Git(arguments,
-                    () => Error("git does not seem to be clean, check git status"));
+                _executor.Git(arguments,
+                    () => _executor.Error("git does not seem to be clean, check git status"));
         }
-
-        void Log(string message) => Console.WriteLine(message);
 
         static string CurrentDirectoryAbsolute => Path.GetFullPath(Directory.GetCurrentDirectory());
     }

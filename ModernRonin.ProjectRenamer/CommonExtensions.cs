@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace ModernRonin.ProjectRenamer
@@ -7,7 +8,7 @@ namespace ModernRonin.ProjectRenamer
     {
         public static string AsText(this bool self) => self ? "yes" : "no";
 
-        public static string Escape(this string self) => $"\"{self}\"";
+        public static string EscapeForShell(this string self) => $"\"{self}\"";
 
         public static bool IsDirectorySeparator(this char self) =>
             self == Path.DirectorySeparatorChar || self == Path.AltDirectorySeparatorChar;
@@ -19,8 +20,11 @@ namespace ModernRonin.ProjectRenamer
             return result.ToString();
         }
 
-        public static string ToAbsolutePath(this string self, string baseDirectory) =>
-            Path.GetFullPath(self, baseDirectory);
+        public static string ToAbsolutePath(this string self, string baseDirectory)
+        {
+            if (self.First().IsDirectorySeparator()) self = self[1..];
+            return Path.GetFullPath(self, baseDirectory);
+        }
 
         public static string ToRelativePath(this string self, string baseDirectory) =>
             Path.GetRelativePath(baseDirectory, self);
