@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Construction;
 using MoreLinq.Extensions;
-using static ModernRonin.ProjectRenamer.Runtime;
 
 namespace ModernRonin.ProjectRenamer
 {
@@ -12,13 +11,18 @@ namespace ModernRonin.ProjectRenamer
     {
         readonly Configuration _configuration;
         readonly IExecutor _executor;
+        readonly IRuntime _runtime;
         readonly string _solutionPath;
 
-        public Application(Configuration configuration, string solutionPath, IExecutor executor)
+        public Application(Configuration configuration,
+            string solutionPath,
+            IExecutor executor,
+            IRuntime runtime)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
             _executor = executor;
+            _runtime = runtime;
         }
 
         public void RollbackGit() => _executor.Git("reset --hard HEAD", () => { });
@@ -59,7 +63,7 @@ namespace ModernRonin.ProjectRenamer
                     "-----------------------------------------------",
                     "Do you want to continue with the rename operation?"
                 };
-                if (!DoesUserAgree(string.Join(Environment.NewLine, lines))) Abort();
+                if (!DoesUserAgree(string.Join(Environment.NewLine, lines))) _runtime.Abort();
             }
 
             var (dependents, dependencies) = analyzeReferences();
@@ -148,7 +152,7 @@ namespace ModernRonin.ProjectRenamer
                         )
                         {
                             RollbackGit();
-                            Abort();
+                            _runtime.Abort();
                         }
                     });
                 }

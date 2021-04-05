@@ -11,7 +11,8 @@ namespace ModernRonin.ProjectRenamer
     {
         static void Main(string[] args)
         {
-            var executor = new Executor();
+            var runtime = new Runtime();
+            var executor = new Executor(runtime);
             var solutionFiles =
                 Directory.EnumerateFiles(".", "*.sln", SearchOption.TopDirectoryOnly).ToArray();
             if (1 != solutionFiles.Length)
@@ -33,7 +34,7 @@ namespace ModernRonin.ProjectRenamer
                     configuration.OldProjectName = removeProjectFileExtension(configuration.OldProjectName);
                     configuration.NewProjectName = removeProjectFileExtension(configuration.NewProjectName);
 
-                    new Application(configuration, solutionPath, executor).Run();
+                    new Application(configuration, solutionPath, executor, runtime).Run();
                     break;
                 default:
                     executor.Error(

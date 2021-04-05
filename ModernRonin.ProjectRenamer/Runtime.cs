@@ -5,11 +5,11 @@ using System.IO;
 
 namespace ModernRonin.ProjectRenamer
 {
-    public static class Runtime
+    public class Runtime : IRuntime
     {
-        public static void Abort() => Environment.Exit(-1);
+        public void Abort() => Environment.Exit(-1);
 
-        public static void DoWithTool(string tool,
+        public void DoWithTool(string tool,
             string arguments,
             Action onNonZeroExitCode,
             Action<ProcessStartInfo> configure,

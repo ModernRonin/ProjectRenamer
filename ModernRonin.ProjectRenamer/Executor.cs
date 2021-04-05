@@ -6,6 +6,10 @@ namespace ModernRonin.ProjectRenamer
     {
         const string ToolDotnet = "dotnet";
         const string ToolGit = "git";
+        readonly IRuntime _runtime;
+
+        public Executor(IRuntime runtime) => _runtime = runtime;
+
         public void DotNet(string arguments) => Tool(ToolDotnet, arguments);
 
         public void DotNet(string arguments, Action onNonZeroExitCode) =>
@@ -23,7 +27,7 @@ namespace ModernRonin.ProjectRenamer
                 RollbackGit();
             }
 
-            Runtime.Abort();
+            _runtime.Abort();
         }
 
         public void Git(string arguments) => Tool(ToolGit, arguments);
@@ -41,19 +45,19 @@ namespace ModernRonin.ProjectRenamer
             Error($"call '{tool} {arguments}' failed - aborting", true);
         }
 
-        static void Tool(string tool, string arguments, Action onNonZeroExitCode)
+        void Tool(string tool, string arguments, Action onNonZeroExitCode)
         {
-            Runtime.DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = false,
+            _runtime.DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = false,
                 _ => { });
         }
 
         void Tool(string tool, string arguments) =>
             Tool(tool, arguments, () => StandardErrorHandler(tool, arguments));
 
-        static string ToolRead(string tool, string arguments, Action onNonZeroExitCode)
+        string ToolRead(string tool, string arguments, Action onNonZeroExitCode)
         {
             var result = string.Empty;
-            Runtime.DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,
+            _runtime.DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,
                 p => result = p.StandardOutput.ReadToEnd());
             return result;
         }
