@@ -19,16 +19,7 @@ namespace ModernRonin.ProjectRenamer
         static IContainer WireUp()
         {
             var builder = new ContainerBuilder();
-
-            builder.RegisterType<ConsoleWrapper>().AsImplementedInterfaces();
-            builder.RegisterType<Runtime>().AsImplementedInterfaces();
-            builder.RegisterType<Executor>().AsImplementedInterfaces();
-            builder.RegisterType<ErrorHandler>().AsImplementedInterfaces();
-            builder.RegisterType<ConfigurationSetup>().AsImplementedInterfaces();
-            builder.RegisterType<Git>().AsImplementedInterfaces();
-            builder.RegisterType<Dotnet>().AsImplementedInterfaces();
-            builder.RegisterType<Application>().AsSelf();
-
+            builder.RegisterModule<RenamerModule>();
             return builder.Build();
         }
     }
