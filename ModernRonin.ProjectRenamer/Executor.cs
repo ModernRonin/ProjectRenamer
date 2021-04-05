@@ -6,9 +6,14 @@ namespace ModernRonin.ProjectRenamer
     {
         const string ToolDotnet = "dotnet";
         const string ToolGit = "git";
+        readonly ILogger _logger;
         readonly IRuntime _runtime;
 
-        public Executor(IRuntime runtime) => _runtime = runtime;
+        public Executor(IRuntime runtime, ILogger logger)
+        {
+            _runtime = runtime;
+            _logger = logger;
+        }
 
         public void DotNet(string arguments) => Tool(ToolDotnet, arguments);
 
@@ -20,10 +25,10 @@ namespace ModernRonin.ProjectRenamer
 
         public void Error(string msg, bool doResetGit = false)
         {
-            Console.Error.WriteLine(msg);
+            _logger.Error(msg);
             if (doResetGit)
             {
-                Console.Error.WriteLine("...running git reset to undo any changes...");
+                _logger.Error("...running git reset to undo any changes...");
                 RollbackGit();
             }
 

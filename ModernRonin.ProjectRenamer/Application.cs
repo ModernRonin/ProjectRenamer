@@ -11,21 +11,25 @@ namespace ModernRonin.ProjectRenamer
     {
         readonly Configuration _configuration;
         readonly IExecutor _executor;
+        readonly IInput _input;
+        readonly ILogger _logger;
         readonly IRuntime _runtime;
         readonly string _solutionPath;
 
         public Application(Configuration configuration,
             string solutionPath,
             IExecutor executor,
-            IRuntime runtime)
+            IRuntime runtime,
+            ILogger logger,
+            IInput input)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
             _executor = executor;
             _runtime = runtime;
+            _logger = logger;
+            _input = input;
         }
-
-        public void RollbackGit() => _executor.Git("reset --hard HEAD", () => { });
 
         public void Run()
         {
@@ -63,7 +67,7 @@ namespace ModernRonin.ProjectRenamer
                     "-----------------------------------------------",
                     "Do you want to continue with the rename operation?"
                 };
-                if (!DoesUserAgree(string.Join(Environment.NewLine, lines))) _runtime.Abort();
+                if (!_input.AskUser(string.Join(Environment.NewLine, lines))) _runtime.Abort();
             }
 
             var (dependents, dependencies) = analyzeReferences();
@@ -102,7 +106,7 @@ namespace ModernRonin.ProjectRenamer
 
             (string[] dependents, string[] dependencies) analyzeReferences()
             {
-                Log(
+                _logger.Info(
                     "Analyzing references in your projects - depending on the number of projects this can take a bit...");
 
                 return (
@@ -137,7 +141,7 @@ namespace ModernRonin.ProjectRenamer
                         : $"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}";
                     var arguments = $"commit -m \"{msg}\"";
                     _executor.Git(arguments,
-                        () => { Console.Error.WriteLine($"'git {arguments}' failed"); });
+                        () => { _logger.Error($"'git {arguments}' failed"); });
                 }
             }
 
@@ -147,11 +151,11 @@ namespace ModernRonin.ProjectRenamer
                 {
                     _executor.DotNet("build", () =>
                     {
-                        if (DoesUserAgree(
+                        if (_input.AskUser(
                             "dotnet build returned an error or warning - do you want to rollback all changes?")
                         )
                         {
-                            RollbackGit();
+                            _executor.RollbackGit();
                             _runtime.Abort();
                         }
                     });
@@ -248,13 +252,6 @@ namespace ModernRonin.ProjectRenamer
             }
         }
 
-        bool DoesUserAgree(string question)
-        {
-            Console.WriteLine($"{question} [Enter=Yes, any other key=No]");
-            var key = Console.ReadKey();
-            return key.Key == ConsoleKey.Enter;
-        }
-
         void EnsureGitIsClean()
         {
             run("update-index -q --refresh");
@@ -266,8 +263,6 @@ namespace ModernRonin.ProjectRenamer
                 _executor.Git(arguments,
                     () => _executor.Error("git does not seem to be clean, check git status"));
         }
-
-        void Log(string message) => Console.WriteLine(message);
 
         static string CurrentDirectoryAbsolute => Path.GetFullPath(Directory.GetCurrentDirectory());
     }

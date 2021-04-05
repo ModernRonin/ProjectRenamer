@@ -5,7 +5,7 @@ namespace ModernRonin.ProjectRenamer
 {
     public interface IRuntime
     {
-        void Abort();
+        void Abort(int exitCode = -1);
 
         void DoWithTool(string tool,
             string arguments,

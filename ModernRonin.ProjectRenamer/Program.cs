@@ -11,8 +11,10 @@ namespace ModernRonin.ProjectRenamer
     {
         static void Main(string[] args)
         {
-            var runtime = new Runtime();
-            var executor = new Executor(runtime);
+            var console = new ConsoleWrapper();
+            var runtime = new Runtime(console);
+            var executor = new Executor(runtime, console);
+
             var solutionFiles =
                 Directory.EnumerateFiles(".", "*.sln", SearchOption.TopDirectoryOnly).ToArray();
             if (1 != solutionFiles.Length)
@@ -21,8 +23,8 @@ namespace ModernRonin.ProjectRenamer
             switch (parseCommandLine())
             {
                 case (_, HelpResult help):
-                    Console.WriteLine(help.Text);
-                    Environment.Exit(help.IsResultOfInvalidInput ? -1 : 0);
+                    console.Info(help.Text);
+                    runtime.Abort(help.IsResultOfInvalidInput ? -1 : 0);
                     break;
                 case (var helpOverview, Configuration configuration):
                     if (configuration.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))
@@ -34,7 +36,7 @@ namespace ModernRonin.ProjectRenamer
                     configuration.OldProjectName = removeProjectFileExtension(configuration.OldProjectName);
                     configuration.NewProjectName = removeProjectFileExtension(configuration.NewProjectName);
 
-                    new Application(configuration, solutionPath, executor, runtime).Run();
+                    new Application(configuration, solutionPath, executor, runtime, console, console).Run();
                     break;
                 default:
                     executor.Error(

@@ -7,7 +7,11 @@ namespace ModernRonin.ProjectRenamer
 {
     public class Runtime : IRuntime
     {
-        public void Abort() => Environment.Exit(-1);
+        readonly ILogger _logger;
+
+        public Runtime(ILogger logger) => _logger = logger;
+
+        public void Abort(int exitCode = -1) => Environment.Exit(exitCode);
 
         public void DoWithTool(string tool,
             string arguments,
@@ -41,7 +45,7 @@ namespace ModernRonin.ProjectRenamer
 
             void onProcessStartProblem()
             {
-                Console.Error.WriteLine($"{tool} could not be found - make sure it's on your PATH.");
+                _logger.Error($"{tool} could not be found - make sure it's on your PATH.");
                 onNonZeroExitCode();
             }
         }
