@@ -1,9 +1,5 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
-using ModernRonin.FluentArgumentParser;
-using ModernRonin.FluentArgumentParser.Help;
-using ModernRonin.FluentArgumentParser.Parsing;
+using Autofac;
 
 namespace ModernRonin.ProjectRenamer
 {
@@ -11,87 +7,26 @@ namespace ModernRonin.ProjectRenamer
     {
         static void Main(string[] args)
         {
-            var console = new ConsoleWrapper();
-            var runtime = new Runtime(console);
-            var executor = new Executor(runtime, console);
+            var container = WireUp();
+            var setup = container.Resolve<IConfigurationSetup>();
+            var (configuration, solutionPath) = setup.Get(args);
+            if (configuration != default)
+                container.Resolve<Func<Configuration, string, Application>>()(configuration, solutionPath)
+                    .Run();
+        }
 
-            var solutionFiles =
-                Directory.EnumerateFiles(".", "*.sln", SearchOption.TopDirectoryOnly).ToArray();
-            if (1 != solutionFiles.Length)
-                executor.Error("Needs to be run from a directory with exactly one *.sln file in it.");
-            var solutionPath = Path.GetFullPath(solutionFiles.First());
-            switch (parseCommandLine())
-            {
-                case (_, HelpResult help):
-                    console.Info(help.Text);
-                    runtime.Abort(help.IsResultOfInvalidInput ? -1 : 0);
-                    break;
-                case (var helpOverview, Configuration configuration):
-                    if (configuration.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))
-                    {
-                        executor.Error(
-                            $"Do not specify paths for input/'old' project names, please.{Environment.NewLine}{Environment.NewLine}{helpOverview}");
-                    }
+        static IContainer WireUp()
+        {
+            var builder = new ContainerBuilder();
 
-                    configuration.OldProjectName = removeProjectFileExtension(configuration.OldProjectName);
-                    configuration.NewProjectName = removeProjectFileExtension(configuration.NewProjectName);
+            builder.RegisterType<ConsoleWrapper>().AsImplementedInterfaces();
+            builder.RegisterType<Runtime>().AsImplementedInterfaces();
+            builder.RegisterType<Executor>().AsImplementedInterfaces();
+            builder.RegisterType<ConfigurationSetup>().AsImplementedInterfaces();
+            builder.RegisterType<Application>().AsSelf();
 
-                    new Application(configuration, solutionPath, executor, runtime, console, console).Run();
-                    break;
-                default:
-                    executor.Error(
-                        "Something went seriously wrong. Please create an issue at https://github.com/ModernRonin/ProjectRenamer with as much detail as possible.");
-                    break;
-            }
-
-            (string, object) parseCommandLine()
-            {
-                var parser = ParserFactory.Create("renameproject",
-                    "Rename C# projects comfortably, including renaming directories, updating references, keeping your git history intact, creating a git commit and updating paket, if needed.");
-                var cfg = parser.DefaultVerb<Configuration>();
-                cfg.Parameter(c => c.DontCreateCommit)
-                    .WithLongName("no-commit")
-                    .WithShortName("nc")
-                    .WithHelp("don't create a commit after renaming has finished");
-                cfg.Parameter(c => c.DoRunBuild)
-                    .WithLongName("build")
-                    .WithShortName("b")
-                    .WithHelp(
-                        "run a build after renaming (but before committing) to make sure everything worked fine.");
-                cfg.Parameter(c => c.DontRunPaketInstall)
-                    .WithLongName("no-paket")
-                    .WithShortName("np")
-                    .WithHelp("don't run paket install (if your solution uses paket as a local tool)");
-                cfg.Parameter(c => c.DontReviewSettings)
-                    .WithLongName("no-review")
-                    .WithShortName("nr")
-                    .WithHelp("don't review all settings before starting work");
-                cfg.Parameter(c => c.OldProjectName)
-                    .WithLongName("old-name")
-                    .WithShortName("o")
-                    .ExpectAt(0)
-                    .WithHelp(
-                        "the name of the existing project - don't provide path or extension, just the name as you see it in VS.");
-                cfg.Parameter(c => c.NewProjectName)
-                    .WithLongName("new-name")
-                    .WithShortName("n")
-                    .ExpectAt(1)
-                    .WithHelp("the new desired project name, again without path or extension");
-                cfg.Parameter(c => c.ExcludedDirectory)
-                    .MakeOptional()
-                    .ExpectAt(2)
-                    .WithLongName("exclude")
-                    .WithShortName("e")
-                    .WithHelp(
-                        "exclude this directory from project reference updates; must be a relative path to the current directory");
-                return (parser.HelpOverview, parser.Parse(args));
-            }
-
-            string removeProjectFileExtension(string projectName) =>
-                projectName.EndsWith(Constants.ProjectFileExtension,
-                    StringComparison.InvariantCultureIgnoreCase)
-                    ? projectName[..^Constants.ProjectFileExtension.Length]
-                    : projectName;
+            var container = builder.Build();
+            return container;
         }
     }
 }
