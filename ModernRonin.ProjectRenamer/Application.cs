@@ -10,8 +10,9 @@ namespace ModernRonin.ProjectRenamer
     public class Application
     {
         readonly Configuration _configuration;
+        readonly IErrorHandler _errors;
         readonly IExecutor _executor;
-        readonly Git _git;
+        readonly IGit _git;
         readonly IInput _input;
         readonly ILogger _logger;
         readonly IRuntime _runtime;
@@ -23,7 +24,8 @@ namespace ModernRonin.ProjectRenamer
             IRuntime runtime,
             ILogger logger,
             IInput input,
-            Git git)
+            IGit git,
+            IErrorHandler errors)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
@@ -32,6 +34,7 @@ namespace ModernRonin.ProjectRenamer
             _logger = logger;
             _input = input;
             _git = git;
+            _errors = errors;
         }
 
         public void Run()
@@ -39,8 +42,7 @@ namespace ModernRonin.ProjectRenamer
             _git.EnsureIsClean();
 
             var (wasFound, oldProjectPath, solutionFolderPath) = findProject();
-            if (!wasFound)
-                _executor.Error($"{_configuration.OldProjectName} cannot be found in the solution");
+            if (!wasFound) _errors.Handle($"{_configuration.OldProjectName} cannot be found in the solution");
 
             var oldDir = Path.GetDirectoryName(oldProjectPath);
             var newBase = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator)
@@ -195,7 +197,7 @@ namespace ModernRonin.ProjectRenamer
                 Directory.CreateDirectory(Path.GetDirectoryName(newDir));
                 _git.Move(oldDir, newDir);
                 var oldPath = Path.GetFileName(oldProjectPath).ToAbsolutePath(newDir);
-                if (oldPath != newProjectPath) _executor.Git($"mv {oldPath} {newProjectPath}");
+                if (oldPath != newProjectPath) _git.Move(oldPath, newProjectPath);
             }
 
             void addToSolution()

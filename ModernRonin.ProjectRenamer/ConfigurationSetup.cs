@@ -10,14 +10,16 @@ namespace ModernRonin.ProjectRenamer
     public class ConfigurationSetup : IConfigurationSetup
     {
         readonly ILogger _console;
+        readonly IErrorHandler _errors;
         readonly IExecutor _executor;
         readonly IRuntime _runtime;
 
-        public ConfigurationSetup(IExecutor executor, ILogger console, IRuntime runtime)
+        public ConfigurationSetup(IExecutor executor, ILogger console, IRuntime runtime, IErrorHandler errors)
         {
             _executor = executor;
             _console = console;
             _runtime = runtime;
+            _errors = errors;
         }
 
         public (Configuration configuration, string solutionPath) Get(string[] commandLineArguments)
@@ -25,7 +27,7 @@ namespace ModernRonin.ProjectRenamer
             var solutionFiles =
                 Directory.EnumerateFiles(".", "*.sln", SearchOption.TopDirectoryOnly).ToArray();
             if (1 != solutionFiles.Length)
-                _executor.Error("Needs to be run from a directory with exactly one *.sln file in it.");
+                _errors.Handle("Needs to be run from a directory with exactly one *.sln file in it.");
             var solutionPath = Path.GetFullPath(solutionFiles.First());
             switch (ParseCommandLine(commandLineArguments))
             {
@@ -36,7 +38,7 @@ namespace ModernRonin.ProjectRenamer
                 case (var helpOverview, Configuration configuration):
                     if (configuration.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))
                     {
-                        _executor.Error(
+                        _errors.Handle(
                             $"Do not specify paths for input/'old' project names, please.{Environment.NewLine}{Environment.NewLine}{helpOverview}");
                     }
 
@@ -45,7 +47,7 @@ namespace ModernRonin.ProjectRenamer
 
                     return (configuration, solutionPath);
                 default:
-                    _executor.Error(
+                    _errors.Handle(
                         "Something went seriously wrong. Please create an issue at https://github.com/ModernRonin/ProjectRenamer with as much detail as possible.");
                     break;
             }

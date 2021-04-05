@@ -6,13 +6,13 @@ namespace ModernRonin.ProjectRenamer
     {
         const string ToolDotnet = "dotnet";
         const string ToolGit = "git";
-        readonly ILogger _logger;
+        readonly IErrorHandler _errors;
         readonly IRuntime _runtime;
 
-        public Executor(IRuntime runtime, ILogger logger)
+        public Executor(IRuntime runtime, IErrorHandler errors)
         {
             _runtime = runtime;
-            _logger = logger;
+            _errors = errors;
         }
 
         public void DotNet(string arguments) => Tool(ToolDotnet, arguments);
@@ -21,19 +21,7 @@ namespace ModernRonin.ProjectRenamer
             Tool(ToolDotnet, arguments, onNonZeroExitCode);
 
         public string DotNetRead(string arguments) =>
-            ToolRead(ToolDotnet, arguments, () => StandardErrorHandler(ToolDotnet, arguments));
-
-        public void Error(string msg, bool doResetGit = false)
-        {
-            _logger.Error(msg);
-            if (doResetGit)
-            {
-                _logger.Error("...running git reset to undo any changes...");
-                RollbackGit();
-            }
-
-            _runtime.Abort();
-        }
+            ToolRead(ToolDotnet, arguments, () => _errors.Handle(ToolDotnet, arguments));
 
         public void Git(string arguments) => Tool(ToolGit, arguments);
 
@@ -41,14 +29,7 @@ namespace ModernRonin.ProjectRenamer
             Tool(ToolGit, arguments, onNonZeroExitCode);
 
         public string GitRead(string arguments) =>
-            ToolRead(ToolGit, arguments, () => StandardErrorHandler(ToolGit, arguments));
-
-        public void RollbackGit() => Git("reset --hard HEAD", () => { });
-
-        void StandardErrorHandler(string tool, string arguments)
-        {
-            Error($"call '{tool} {arguments}' failed - aborting", true);
-        }
+            ToolRead(ToolGit, arguments, () => _errors.Handle(ToolGit, arguments));
 
         void Tool(string tool, string arguments, Action onNonZeroExitCode)
         {
@@ -57,7 +38,7 @@ namespace ModernRonin.ProjectRenamer
         }
 
         void Tool(string tool, string arguments) =>
-            Tool(tool, arguments, () => StandardErrorHandler(tool, arguments));
+            Tool(tool, arguments, () => _errors.Handle(tool, arguments));
 
         string ToolRead(string tool, string arguments, Action onNonZeroExitCode)
         {

@@ -2,13 +2,15 @@
 {
     public class Git : IGit
     {
+        readonly IErrorHandler _errors;
         readonly IExecutor _executor;
         readonly ILogger _logger;
 
-        public Git(IExecutor executor, ILogger logger)
+        public Git(IExecutor executor, ILogger logger, IErrorHandler errors)
         {
             _executor = executor;
             _logger = logger;
+            _errors = errors;
         }
 
         public void Commit(string msg)
@@ -27,12 +29,12 @@
 
             void run(string arguments) =>
                 _executor.Git(arguments,
-                    () => _executor.Error("git does not seem to be clean, check git status"));
+                    () => _errors.Handle("git does not seem to be clean, check git status"));
         }
 
         public string GetVersion() => _executor.GitRead("--version");
 
-        public void Move(string oldDir, string newDir) => _executor.Git($"mv {oldDir} {newDir}");
+        public void Move(string oldPath, string newPath) => _executor.Git($"mv {oldPath} {newPath}");
         public void RollbackAllChanges() => _executor.Git("reset --hard HEAD", () => { });
         public void StageAllChanges() => _executor.Git("add .");
     }

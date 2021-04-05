@@ -5,7 +5,7 @@
         void Commit(string msg);
         void EnsureIsClean();
         string GetVersion();
-        void Move(string oldDir, string newDir);
+        void Move(string oldPath, string newPath);
         void RollbackAllChanges();
         void StageAllChanges();
     }

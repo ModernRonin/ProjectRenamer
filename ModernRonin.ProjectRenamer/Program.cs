@@ -16,6 +16,11 @@ namespace ModernRonin.ProjectRenamer
                 .Run();
         }
 
+        void StandardErrorHandler(string tool, string arguments)
+        {
+            Error($"call '{tool} {arguments}' failed - aborting", true);
+        }
+
         static IContainer WireUp()
         {
             var builder = new ContainerBuilder();
@@ -23,6 +28,7 @@ namespace ModernRonin.ProjectRenamer
             builder.RegisterType<ConsoleWrapper>().AsImplementedInterfaces();
             builder.RegisterType<Runtime>().AsImplementedInterfaces();
             builder.RegisterType<Executor>().AsImplementedInterfaces();
+            builder.RegisterType<ErrorHandler>().AsImplementedInterfaces();
             builder.RegisterType<ConfigurationSetup>().AsImplementedInterfaces();
             builder.RegisterType<Git>().AsImplementedInterfaces();
             builder.RegisterType<Application>().AsSelf();
