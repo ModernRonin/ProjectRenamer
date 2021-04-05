@@ -11,6 +11,7 @@ namespace ModernRonin.ProjectRenamer
     {
         readonly Configuration _configuration;
         readonly IExecutor _executor;
+        readonly Git _git;
         readonly IInput _input;
         readonly ILogger _logger;
         readonly IRuntime _runtime;
@@ -21,7 +22,8 @@ namespace ModernRonin.ProjectRenamer
             IExecutor executor,
             IRuntime runtime,
             ILogger logger,
-            IInput input)
+            IInput input,
+            Git git)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
@@ -29,11 +31,12 @@ namespace ModernRonin.ProjectRenamer
             _runtime = runtime;
             _logger = logger;
             _input = input;
+            _git = git;
         }
 
         public void Run()
         {
-            EnsureGitIsClean();
+            _git.EnsureIsClean();
 
             var (wasFound, oldProjectPath, solutionFolderPath) = findProject();
             if (!wasFound)
@@ -47,7 +50,7 @@ namespace ModernRonin.ProjectRenamer
             var newFileName = Path.GetFileName(_configuration.NewProjectName);
             var newProjectPath = Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
             var isPaketUsed = Directory.Exists(".paket");
-            var gitVersion = _executor.GitRead("--version");
+            var gitVersion = _git.GetVersion();
             if (!_configuration.DontReviewSettings)
             {
                 var lines = new[]
@@ -78,7 +81,7 @@ namespace ModernRonin.ProjectRenamer
             addNewReferences();
             addToSolution();
             updatePaket();
-            stageAllChanges();
+            _git.StageAllChanges();
             build();
             commit();
 
@@ -139,9 +142,7 @@ namespace ModernRonin.ProjectRenamer
                     var msg = wasMove
                         ? $"Moved {oldProjectPath.ToRelativePath(CurrentDirectoryAbsolute)} to {newProjectPath.ToRelativePath(CurrentDirectoryAbsolute)}"
                         : $"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}";
-                    var arguments = $"commit -m \"{msg}\"";
-                    _executor.Git(arguments,
-                        () => { _logger.Error($"'git {arguments}' failed"); });
+                    _git.Commit(msg);
                 }
             }
 
@@ -155,14 +156,12 @@ namespace ModernRonin.ProjectRenamer
                             "dotnet build returned an error or warning - do you want to rollback all changes?")
                         )
                         {
-                            _executor.RollbackGit();
+                            _git.RollbackAllChanges();
                             _runtime.Abort();
                         }
                     });
                 }
             }
-
-            void stageAllChanges() => _executor.Git("add .");
 
             void updatePaket()
             {
@@ -194,7 +193,7 @@ namespace ModernRonin.ProjectRenamer
             void gitMove()
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(newDir));
-                _executor.Git($"mv {oldDir} {newDir}");
+                _git.Move(oldDir, newDir);
                 var oldPath = Path.GetFileName(oldProjectPath).ToAbsolutePath(newDir);
                 if (oldPath != newProjectPath) _executor.Git($"mv {oldPath} {newProjectPath}");
             }
@@ -250,18 +249,6 @@ namespace ModernRonin.ProjectRenamer
                             SearchOption.AllDirectories)
                         .ToArray();
             }
-        }
-
-        void EnsureGitIsClean()
-        {
-            run("update-index -q --refresh");
-            run("diff-index --quiet --cached HEAD --");
-            run("diff-files --quiet");
-            run("ls-files --exclude-standard --others");
-
-            void run(string arguments) =>
-                _executor.Git(arguments,
-                    () => _executor.Error("git does not seem to be clean, check git status"));
         }
 
         static string CurrentDirectoryAbsolute => Path.GetFullPath(Directory.GetCurrentDirectory());
