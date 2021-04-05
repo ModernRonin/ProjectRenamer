@@ -12,6 +12,7 @@ namespace ModernRonin.ProjectRenamer
         readonly Configuration _configuration;
         readonly IDotnet _dotnet;
         readonly IErrorHandler _errors;
+        readonly IFilesystem _filesystem;
         readonly IGit _git;
         readonly IInput _input;
         readonly ILogger _logger;
@@ -25,7 +26,8 @@ namespace ModernRonin.ProjectRenamer
             IInput input,
             IGit git,
             IErrorHandler errors,
-            IDotnet dotnet)
+            IDotnet dotnet,
+            IFilesystem filesystem)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
@@ -35,6 +37,7 @@ namespace ModernRonin.ProjectRenamer
             _git = git;
             _errors = errors;
             _dotnet = dotnet;
+            _filesystem = filesystem;
         }
 
         public void Run()
@@ -51,7 +54,7 @@ namespace ModernRonin.ProjectRenamer
             var newDir = _configuration.NewProjectName.ToAbsolutePath(newBase);
             var newFileName = Path.GetFileName(_configuration.NewProjectName);
             var newProjectPath = Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
-            var isPaketUsed = Directory.Exists(".paket");
+            var isPaketUsed = _filesystem.DoesDirectoryExist(".paket");
             var gitVersion = _git.GetVersion();
             if (!_configuration.DontReviewSettings)
             {
@@ -182,7 +185,7 @@ namespace ModernRonin.ProjectRenamer
 
             void gitMove()
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(newDir));
+                _filesystem.EnsureDirectoryExists(Path.GetDirectoryName(newDir));
                 _git.Move(oldDir, newDir);
                 var oldPath = Path.GetFileName(oldProjectPath).ToAbsolutePath(newDir);
                 if (oldPath != newProjectPath) _git.Move(oldPath, newProjectPath);
@@ -228,14 +231,10 @@ namespace ModernRonin.ProjectRenamer
 
                 return all.Except(excluded).ToArray();
 
-                string[] filesIn(string directory) =>
-                    Directory
-                        .EnumerateFiles(directory, $"*{Constants.ProjectFileExtension}",
-                            SearchOption.AllDirectories)
-                        .ToArray();
+                string[] filesIn(string directory) => _filesystem.FindProjectFiles(directory, true);
             }
         }
 
-        static string CurrentDirectoryAbsolute => Path.GetFullPath(Directory.GetCurrentDirectory());
+        string CurrentDirectoryAbsolute => Path.GetFullPath(_filesystem.CurrentDirectory);
     }
 }
