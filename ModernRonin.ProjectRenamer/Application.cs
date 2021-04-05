@@ -12,7 +12,6 @@ namespace ModernRonin.ProjectRenamer
         readonly Configuration _configuration;
         readonly IDotnet _dotnet;
         readonly IErrorHandler _errors;
-        readonly IExecutor _executor;
         readonly IGit _git;
         readonly IInput _input;
         readonly ILogger _logger;
@@ -21,7 +20,6 @@ namespace ModernRonin.ProjectRenamer
 
         public Application(Configuration configuration,
             string solutionPath,
-            IExecutor executor,
             IRuntime runtime,
             ILogger logger,
             IInput input,
@@ -31,7 +29,6 @@ namespace ModernRonin.ProjectRenamer
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
-            _executor = executor;
             _runtime = runtime;
             _logger = logger;
             _input = input;
