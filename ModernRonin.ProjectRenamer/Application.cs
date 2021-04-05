@@ -89,7 +89,7 @@ namespace ModernRonin.ProjectRenamer
             }
 
             void projectReferenceCommand(string command, string project, string reference) =>
-                DotNet($"{command} {project.Escape()} reference {reference.Escape()}");
+                DotNet($"{command} {project.EscapeForShell()} reference {reference.EscapeForShell()}");
 
             (string[] dependents, string[] dependencies) analyzeReferences()
             {
@@ -110,7 +110,7 @@ namespace ModernRonin.ProjectRenamer
             IEnumerable<string> getReferencedProjects(string project)
             {
                 var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
-                var relativeReferences = DotNetRead($"list {project.Escape()} reference")
+                var relativeReferences = DotNetRead($"list {project.EscapeForShell()} reference")
                     .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
                     .Skip(2);
                 return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
@@ -197,7 +197,7 @@ namespace ModernRonin.ProjectRenamer
             void removeFromSolution() => solutionCommand("remove", oldProjectPath);
 
             void solutionCommand(string command, string projectPath) =>
-                DotNet($"sln {command} {projectPath.Escape()}");
+                DotNet($"sln {command} {projectPath.EscapeForShell()}");
 
             (bool wasFound, string projectPath, string solutionFolder) findProject()
             {
