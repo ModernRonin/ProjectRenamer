@@ -16,11 +16,6 @@ namespace ModernRonin.ProjectRenamer
                 .Run();
         }
 
-        void StandardErrorHandler(string tool, string arguments)
-        {
-            Error($"call '{tool} {arguments}' failed - aborting", true);
-        }
-
         static IContainer WireUp()
         {
             var builder = new ContainerBuilder();

@@ -7,8 +7,8 @@ namespace ModernRonin.ProjectRenamer
         void DotNet(string arguments);
         void DotNet(string arguments, Action onNonZeroExitCode);
         string DotNetRead(string arguments);
-        void Git(string arguments);
-        void Git(string arguments, Action onNonZeroExitCode);
-        string GitRead(string arguments);
+        void Tool(string tool, string arguments, Action onNonZeroExitCode);
+        void Tool(string tool, string arguments);
+        string ToolRead(string tool, string arguments, Action onNonZeroExitCode);
     }
 }

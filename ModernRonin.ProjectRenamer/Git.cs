@@ -1,7 +1,11 @@
-﻿namespace ModernRonin.ProjectRenamer
+﻿using System;
+
+namespace ModernRonin.ProjectRenamer
 {
     public class Git : IGit
     {
+        const string ToolGit = "git";
+
         readonly IErrorHandler _errors;
         readonly IExecutor _executor;
         readonly ILogger _logger;
@@ -16,8 +20,8 @@
         public void Commit(string msg)
         {
             var arguments = $"commit -m \"{msg}\"";
-            _executor.Git(arguments,
-                () => { _logger.Error($"'git {arguments}' failed"); });
+            Run(arguments,
+                () => _logger.Error($"'git {arguments}' failed"));
         }
 
         public void EnsureIsClean()
@@ -28,14 +32,22 @@
             run("ls-files --exclude-standard --others");
 
             void run(string arguments) =>
-                _executor.Git(arguments,
+                Run(arguments,
                     () => _errors.Handle("git does not seem to be clean, check git status"));
         }
 
-        public string GetVersion() => _executor.GitRead("--version");
+        public string GetVersion() => Read("--version");
 
-        public void Move(string oldPath, string newPath) => _executor.Git($"mv {oldPath} {newPath}");
-        public void RollbackAllChanges() => _executor.Git("reset --hard HEAD", () => { });
-        public void StageAllChanges() => _executor.Git("add .");
+        public void Move(string oldPath, string newPath) => Run($"mv {oldPath} {newPath}");
+        public void RollbackAllChanges() => Run("reset --hard HEAD", () => { });
+        public void StageAllChanges() => Run("add .");
+
+        string Read(string arguments) =>
+            _executor.ToolRead(ToolGit, arguments, () => _errors.Handle(ToolGit, arguments));
+
+        void Run(string arguments) => _executor.Tool(ToolGit, arguments);
+
+        void Run(string arguments, Action onNonZeroExitCode) =>
+            _executor.Tool(ToolGit, arguments, onNonZeroExitCode);
     }
 }
