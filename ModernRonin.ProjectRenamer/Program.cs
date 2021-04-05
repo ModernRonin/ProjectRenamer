@@ -26,6 +26,7 @@ namespace ModernRonin.ProjectRenamer
             builder.RegisterType<ErrorHandler>().AsImplementedInterfaces();
             builder.RegisterType<ConfigurationSetup>().AsImplementedInterfaces();
             builder.RegisterType<Git>().AsImplementedInterfaces();
+            builder.RegisterType<Dotnet>().AsImplementedInterfaces();
             builder.RegisterType<Application>().AsSelf();
 
             return builder.Build();

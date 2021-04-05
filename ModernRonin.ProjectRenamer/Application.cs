@@ -10,6 +10,7 @@ namespace ModernRonin.ProjectRenamer
     public class Application
     {
         readonly Configuration _configuration;
+        readonly IDotnet _dotnet;
         readonly IErrorHandler _errors;
         readonly IExecutor _executor;
         readonly IGit _git;
@@ -25,7 +26,8 @@ namespace ModernRonin.ProjectRenamer
             ILogger logger,
             IInput input,
             IGit git,
-            IErrorHandler errors)
+            IErrorHandler errors,
+            IDotnet dotnet)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
@@ -35,6 +37,7 @@ namespace ModernRonin.ProjectRenamer
             _input = input;
             _git = git;
             _errors = errors;
+            _dotnet = dotnet;
         }
 
         public void Run()
@@ -89,25 +92,15 @@ namespace ModernRonin.ProjectRenamer
 
             void addNewReferences()
             {
-                dependents.ForEach(p => addReference(p, newProjectPath));
-                dependencies.ForEach(d => addReference(newProjectPath, d));
-
-                void addReference(string project, string reference) =>
-                    projectReferenceCommand("add", project, reference);
+                dependents.ForEach(p => _dotnet.AddReference(p, newProjectPath));
+                dependencies.ForEach(d => _dotnet.AddReference(newProjectPath, d));
             }
 
             void removeOldReferences()
             {
-                dependents.ForEach(p => removeReference(p, oldProjectPath));
-                dependencies.ForEach(d => removeReference(oldProjectPath, d));
-
-                void removeReference(string project, string reference) =>
-                    projectReferenceCommand("remove", project, reference);
+                dependents.ForEach(p => _dotnet.RemoveReference(p, oldProjectPath));
+                dependencies.ForEach(d => _dotnet.RemoveReference(oldProjectPath, d));
             }
-
-            void projectReferenceCommand(string command, string project, string reference) =>
-                _executor.DotNet(
-                    $"{command} {project.EscapeForShell()} reference {reference.EscapeForShell()}");
 
             (string[] dependents, string[] dependencies) analyzeReferences()
             {
@@ -127,10 +120,8 @@ namespace ModernRonin.ProjectRenamer
 
             IEnumerable<string> getReferencedProjects(string project)
             {
+                var relativeReferences = _dotnet.GetReferencedProjects(project);
                 var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
-                var relativeReferences = _executor.DotNetRead($"list {project.EscapeForShell()} reference")
-                    .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-                    .Skip(2);
                 return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
             }
 
@@ -152,7 +143,7 @@ namespace ModernRonin.ProjectRenamer
             {
                 if (_configuration.DoRunBuild)
                 {
-                    _executor.DotNet("build", () =>
+                    _dotnet.BuildSolution(() =>
                     {
                         if (_input.AskUser(
                             "dotnet build returned an error or warning - do you want to rollback all changes?")
@@ -167,7 +158,7 @@ namespace ModernRonin.ProjectRenamer
 
             void updatePaket()
             {
-                if (isPaketUsed && !_configuration.DontRunPaketInstall) _executor.DotNet("paket install");
+                if (isPaketUsed && !_configuration.DontRunPaketInstall) _dotnet.PaketInstall();
             }
 
             void updatePaketReference()
@@ -202,16 +193,11 @@ namespace ModernRonin.ProjectRenamer
 
             void addToSolution()
             {
-                var solutionFolderArgument = string.IsNullOrWhiteSpace(solutionFolderPath)
-                    ? string.Empty
-                    : $"-s \"{solutionFolderPath}\"";
-                solutionCommand($"add {solutionFolderArgument}", newProjectPath);
+                if (string.IsNullOrWhiteSpace(solutionFolderPath)) _dotnet.AddToSolution(newProjectPath);
+                else _dotnet.AddToSolution(newProjectPath, solutionFolderPath);
             }
 
-            void removeFromSolution() => solutionCommand("remove", oldProjectPath);
-
-            void solutionCommand(string command, string projectPath) =>
-                _executor.DotNet($"sln {command} {projectPath.EscapeForShell()}");
+            void removeFromSolution() => _dotnet.RemoveFromSolution(oldProjectPath);
 
             (bool wasFound, string projectPath, string solutionFolder) findProject()
             {

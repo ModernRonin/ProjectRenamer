@@ -4,7 +4,6 @@ namespace ModernRonin.ProjectRenamer
 {
     public class Executor : IExecutor
     {
-        const string ToolDotnet = "dotnet";
         readonly IErrorHandler _errors;
         readonly IRuntime _runtime;
 
@@ -13,14 +12,6 @@ namespace ModernRonin.ProjectRenamer
             _runtime = runtime;
             _errors = errors;
         }
-
-        public void DotNet(string arguments) => Tool(ToolDotnet, arguments);
-
-        public void DotNet(string arguments, Action onNonZeroExitCode) =>
-            Tool(ToolDotnet, arguments, onNonZeroExitCode);
-
-        public string DotNetRead(string arguments) =>
-            ToolRead(ToolDotnet, arguments, () => _errors.Handle(ToolDotnet, arguments));
 
         public void Tool(string tool, string arguments, Action onNonZeroExitCode)
         {
