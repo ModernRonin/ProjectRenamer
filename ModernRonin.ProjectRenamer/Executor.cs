@@ -5,25 +5,39 @@ using System.IO;
 
 namespace ModernRonin.ProjectRenamer
 {
-    public static class Executor
+    public class Executor : IExecutor
     {
         const string ToolDotnet = "dotnet";
         const string ToolGit = "git";
-        public static void DotNet(string arguments) => Tool(ToolDotnet, arguments);
+        public void DotNet(string arguments) => Tool(ToolDotnet, arguments);
 
-        public static void DotNet(string arguments, Action onNonZeroExitCode) =>
+        public void DotNet(string arguments, Action onNonZeroExitCode) =>
             Tool(ToolDotnet, arguments, onNonZeroExitCode);
 
-        public static string DotNetRead(string arguments) =>
+        public string DotNetRead(string arguments) =>
             ToolRead(ToolDotnet, arguments, () => StandardErrorHandler(ToolDotnet, arguments));
 
-        public static void Git(string arguments) => Tool(ToolGit, arguments);
+        public void Git(string arguments) => Tool(ToolGit, arguments);
 
-        public static void Git(string arguments, Action onNonZeroExitCode) =>
+        public void Git(string arguments, Action onNonZeroExitCode) =>
             Tool(ToolGit, arguments, onNonZeroExitCode);
 
-        public static string GitRead(string arguments) =>
+        public string GitRead(string arguments) =>
             ToolRead(ToolGit, arguments, () => StandardErrorHandler(ToolGit, arguments));
+
+        public void Error(string msg, bool doResetGit = false)
+        {
+            Console.Error.WriteLine(msg);
+            if (doResetGit)
+            {
+                Console.Error.WriteLine("...running git reset to undo any changes...");
+                RollbackGit();
+            }
+
+            Runtime.Abort();
+        }
+
+        public void RollbackGit() => Git("reset --hard HEAD", () => { });
 
         static void DoWithTool(string tool,
             string arguments,
@@ -62,9 +76,9 @@ namespace ModernRonin.ProjectRenamer
             }
         }
 
-        static void StandardErrorHandler(string tool, string arguments)
+        void StandardErrorHandler(string tool, string arguments)
         {
-            Runtime.Error($"call '{tool} {arguments}' failed - aborting", true);
+            Error($"call '{tool} {arguments}' failed - aborting", true);
         }
 
         static void Tool(string tool, string arguments, Action onNonZeroExitCode)
@@ -73,7 +87,7 @@ namespace ModernRonin.ProjectRenamer
                 _ => { });
         }
 
-        static void Tool(string tool, string arguments) =>
+        void Tool(string tool, string arguments) =>
             Tool(tool, arguments, () => StandardErrorHandler(tool, arguments));
 
         static string ToolRead(string tool, string arguments, Action onNonZeroExitCode)

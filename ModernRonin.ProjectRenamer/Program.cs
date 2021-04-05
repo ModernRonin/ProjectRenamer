@@ -4,7 +4,6 @@ using System.Linq;
 using ModernRonin.FluentArgumentParser;
 using ModernRonin.FluentArgumentParser.Help;
 using ModernRonin.FluentArgumentParser.Parsing;
-using static ModernRonin.ProjectRenamer.Runtime;
 
 namespace ModernRonin.ProjectRenamer
 {
@@ -12,10 +11,11 @@ namespace ModernRonin.ProjectRenamer
     {
         static void Main(string[] args)
         {
+            var executor = new Executor();
             var solutionFiles =
                 Directory.EnumerateFiles(".", "*.sln", SearchOption.TopDirectoryOnly).ToArray();
             if (1 != solutionFiles.Length)
-                Error("Needs to be run from a directory with exactly one *.sln file in it.");
+                executor.Error("Needs to be run from a directory with exactly one *.sln file in it.");
             var solutionPath = Path.GetFullPath(solutionFiles.First());
             switch (parseCommandLine())
             {
@@ -26,17 +26,17 @@ namespace ModernRonin.ProjectRenamer
                 case (var helpOverview, Configuration configuration):
                     if (configuration.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))
                     {
-                        Error(
+                        executor.Error(
                             $"Do not specify paths for input/'old' project names, please.{Environment.NewLine}{Environment.NewLine}{helpOverview}");
                     }
 
                     configuration.OldProjectName = removeProjectFileExtension(configuration.OldProjectName);
                     configuration.NewProjectName = removeProjectFileExtension(configuration.NewProjectName);
 
-                    new Application(configuration, solutionPath).Run();
+                    new Application(configuration, solutionPath, executor).Run();
                     break;
                 default:
-                    Error(
+                    executor.Error(
                         "Something went seriously wrong. Please create an issue at https://github.com/ModernRonin/ProjectRenamer with as much detail as possible.");
                     break;
             }
