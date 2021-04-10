@@ -41,6 +41,15 @@ namespace ModernRonin.ProjectRenamer.Tests
             '\\'.IsDirectorySeparator().Should().BeTrue();
 
         [Test]
+        public void
+            On_Windows_EnsurePlatformDirectorySeparators_replaces_forward_slashes_with_backward_slashes()
+        {
+            @"alpha/bravo\charlie/delta".EnsurePlatformDirectorySeparators()
+                .Should()
+                .Be(@"alpha\bravo\charlie\delta");
+        }
+
+        [Test]
         public void Repeat_returns_the_string_repeated_the_passed_number_of_times() =>
             "alpha".Repeat(3).Should().Be("alphaalphaalpha");
 

@@ -20,6 +20,11 @@
       "commandLineArgs": "LibraryInSubFolder ProjectInSubFolder --no-commit --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
+    "rename library, in nested solution folder starting with ., no commit": {
+      "commandName": "Project",
+      "commandLineArgs": "LibraryInNestedSolutionFolderWithLeadingPeriod Changed --no-commit --no-paket",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
     "move root library to subfolder, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInRoot subfolder/LibraryInRoot --no-paket",
