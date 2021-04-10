@@ -8,9 +8,6 @@ namespace ModernRonin.ProjectRenamer
     {
         public static string AsText(this bool self) => self ? "yes" : "no";
 
-        public static string EnsurePlatformDirectorySeparators(this string self) =>
-            self.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-
         public static string EscapeForShell(this string self) => $"\"{self}\"";
 
         public static bool IsDirectorySeparator(this char self) =>
@@ -22,6 +19,8 @@ namespace ModernRonin.ProjectRenamer
             for (var i = 0; i < count; ++i) result.Append(self);
             return result.ToString();
         }
+
+        public static string ReplaceSlashesWithBackslashes(this string self) => self.Replace('/', '\\');
 
         public static string ToAbsolutePath(this string self, string baseDirectory)
         {

@@ -20,7 +20,7 @@ namespace ModernRonin.ProjectRenamer
             ProjectReferenceCommand("add", project, reference);
 
         public void AddToSolution(string pathToProject, string solutionFolder) =>
-            SolutionCommand($"add -s {solutionFolder.EnsurePlatformDirectorySeparators().EscapeForShell()}",
+            SolutionCommand($"add -s {solutionFolder.ReplaceSlashesWithBackslashes().EscapeForShell()}",
                 pathToProject);
 
         public void AddToSolution(string pathToProject) => SolutionCommand("add", pathToProject);
