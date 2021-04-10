@@ -1,7 +1,9 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 <PropertyGroup>
-	<Version>2.1.2</Version>
+	<Version>2.1.3</Version>
 	<PackageReleaseNotes>
+2.1.3:
+* bugfix: fixed a bug concerning nested solution folders; thanks to @Mike-E-angelo for reporting the bug
 2.1.2:
 * bugfix: fixed another whitespace related scenario; thanks to @sejohnson-at-griffis for reporting the bug
 2.1.1:
