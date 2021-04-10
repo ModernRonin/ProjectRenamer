@@ -1,4 +1,5 @@
-﻿using AutofacContrib.NSubstitute;
+﻿using System.Runtime.InteropServices;
+using AutofacContrib.NSubstitute;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -23,9 +24,11 @@ namespace ModernRonin.ProjectRenamer.Tests
         public void AddToSolution_replaces_forward_slashes_with_backward_slashes_in_solutionFolder()
         {
             _underTest.AddToSolution("c:/myproject/myproject.csproj", "Features/.shared");
-
+            var expectedArguments = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? @"sln add -s ""Features\.shared"" ""c:/myproject/myproject.csproj"""
+                : @"sln add -s ""Features/.shared"" ""c:/myproject/myproject.csproj""";
             Executor.Received()
-                .Tool("dotnet", @"sln add -s ""Features\.shared"" ""c:/myproject/myproject.csproj""");
+                .Tool("dotnet", expectedArguments);
         }
     }
 }
