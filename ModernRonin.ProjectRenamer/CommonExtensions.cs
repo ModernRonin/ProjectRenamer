@@ -8,6 +8,9 @@ namespace ModernRonin.ProjectRenamer
     {
         public static string AsText(this bool self) => self ? "yes" : "no";
 
+        public static string EnsurePlatformDirectorySeparators(this string self) =>
+            self.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
         public static string EscapeForShell(this string self) => $"\"{self}\"";
 
         public static bool IsDirectorySeparator(this char self) =>

@@ -4,62 +4,25 @@ namespace ModernRonin.ProjectRenamer
 {
     public class Executor : IExecutor
     {
-        const string ToolDotnet = "dotnet";
-        const string ToolGit = "git";
-        readonly ILogger _logger;
+        readonly IErrorHandler _errors;
         readonly IRuntime _runtime;
 
-        public Executor(IRuntime runtime, ILogger logger)
+        public Executor(IRuntime runtime, IErrorHandler errors)
         {
             _runtime = runtime;
-            _logger = logger;
+            _errors = errors;
         }
 
-        public void DotNet(string arguments) => Tool(ToolDotnet, arguments);
-
-        public void DotNet(string arguments, Action onNonZeroExitCode) =>
-            Tool(ToolDotnet, arguments, onNonZeroExitCode);
-
-        public string DotNetRead(string arguments) =>
-            ToolRead(ToolDotnet, arguments, () => StandardErrorHandler(ToolDotnet, arguments));
-
-        public void Error(string msg, bool doResetGit = false)
-        {
-            _logger.Error(msg);
-            if (doResetGit)
-            {
-                _logger.Error("...running git reset to undo any changes...");
-                RollbackGit();
-            }
-
-            _runtime.Abort();
-        }
-
-        public void Git(string arguments) => Tool(ToolGit, arguments);
-
-        public void Git(string arguments, Action onNonZeroExitCode) =>
-            Tool(ToolGit, arguments, onNonZeroExitCode);
-
-        public string GitRead(string arguments) =>
-            ToolRead(ToolGit, arguments, () => StandardErrorHandler(ToolGit, arguments));
-
-        public void RollbackGit() => Git("reset --hard HEAD", () => { });
-
-        void StandardErrorHandler(string tool, string arguments)
-        {
-            Error($"call '{tool} {arguments}' failed - aborting", true);
-        }
-
-        void Tool(string tool, string arguments, Action onNonZeroExitCode)
+        public void Tool(string tool, string arguments, Action onNonZeroExitCode)
         {
             _runtime.DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = false,
                 _ => { });
         }
 
-        void Tool(string tool, string arguments) =>
-            Tool(tool, arguments, () => StandardErrorHandler(tool, arguments));
+        public void Tool(string tool, string arguments) =>
+            Tool(tool, arguments, () => _errors.Handle(tool, arguments));
 
-        string ToolRead(string tool, string arguments, Action onNonZeroExitCode)
+        public string ToolRead(string tool, string arguments, Action onNonZeroExitCode)
         {
             var result = string.Empty;
             _runtime.DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,

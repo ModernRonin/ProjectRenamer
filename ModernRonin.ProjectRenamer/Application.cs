@@ -10,7 +10,10 @@ namespace ModernRonin.ProjectRenamer
     public class Application
     {
         readonly Configuration _configuration;
-        readonly IExecutor _executor;
+        readonly IDotnet _dotnet;
+        readonly IErrorHandler _errors;
+        readonly IFilesystem _filesystem;
+        readonly IGit _git;
         readonly IInput _input;
         readonly ILogger _logger;
         readonly IRuntime _runtime;
@@ -18,26 +21,31 @@ namespace ModernRonin.ProjectRenamer
 
         public Application(Configuration configuration,
             string solutionPath,
-            IExecutor executor,
             IRuntime runtime,
             ILogger logger,
-            IInput input)
+            IInput input,
+            IGit git,
+            IErrorHandler errors,
+            IDotnet dotnet,
+            IFilesystem filesystem)
         {
             _configuration = configuration;
             _solutionPath = solutionPath;
-            _executor = executor;
             _runtime = runtime;
             _logger = logger;
             _input = input;
+            _git = git;
+            _errors = errors;
+            _dotnet = dotnet;
+            _filesystem = filesystem;
         }
 
         public void Run()
         {
-            EnsureGitIsClean();
+            _git.EnsureIsClean();
 
             var (wasFound, oldProjectPath, solutionFolderPath) = findProject();
-            if (!wasFound)
-                _executor.Error($"{_configuration.OldProjectName} cannot be found in the solution");
+            if (!wasFound) _errors.Handle($"{_configuration.OldProjectName} cannot be found in the solution");
 
             var oldDir = Path.GetDirectoryName(oldProjectPath);
             var newBase = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator)
@@ -46,8 +54,8 @@ namespace ModernRonin.ProjectRenamer
             var newDir = _configuration.NewProjectName.ToAbsolutePath(newBase);
             var newFileName = Path.GetFileName(_configuration.NewProjectName);
             var newProjectPath = Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
-            var isPaketUsed = Directory.Exists(".paket");
-            var gitVersion = _executor.GitRead("--version");
+            var isPaketUsed = _filesystem.DoesDirectoryExist(".paket");
+            var gitVersion = _git.GetVersion();
             if (!_configuration.DontReviewSettings)
             {
                 var lines = new[]
@@ -78,31 +86,21 @@ namespace ModernRonin.ProjectRenamer
             addNewReferences();
             addToSolution();
             updatePaket();
-            stageAllChanges();
+            _git.StageAllChanges();
             build();
             commit();
 
             void addNewReferences()
             {
-                dependents.ForEach(p => addReference(p, newProjectPath));
-                dependencies.ForEach(d => addReference(newProjectPath, d));
-
-                void addReference(string project, string reference) =>
-                    projectReferenceCommand("add", project, reference);
+                dependents.ForEach(p => _dotnet.AddReference(p, newProjectPath));
+                dependencies.ForEach(d => _dotnet.AddReference(newProjectPath, d));
             }
 
             void removeOldReferences()
             {
-                dependents.ForEach(p => removeReference(p, oldProjectPath));
-                dependencies.ForEach(d => removeReference(oldProjectPath, d));
-
-                void removeReference(string project, string reference) =>
-                    projectReferenceCommand("remove", project, reference);
+                dependents.ForEach(p => _dotnet.RemoveReference(p, oldProjectPath));
+                dependencies.ForEach(d => _dotnet.RemoveReference(oldProjectPath, d));
             }
-
-            void projectReferenceCommand(string command, string project, string reference) =>
-                _executor.DotNet(
-                    $"{command} {project.EscapeForShell()} reference {reference.EscapeForShell()}");
 
             (string[] dependents, string[] dependencies) analyzeReferences()
             {
@@ -122,10 +120,8 @@ namespace ModernRonin.ProjectRenamer
 
             IEnumerable<string> getReferencedProjects(string project)
             {
+                var relativeReferences = _dotnet.GetReferencedProjects(project);
                 var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
-                var relativeReferences = _executor.DotNetRead($"list {project.EscapeForShell()} reference")
-                    .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-                    .Skip(2);
                 return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
             }
 
@@ -139,9 +135,7 @@ namespace ModernRonin.ProjectRenamer
                     var msg = wasMove
                         ? $"Moved {oldProjectPath.ToRelativePath(CurrentDirectoryAbsolute)} to {newProjectPath.ToRelativePath(CurrentDirectoryAbsolute)}"
                         : $"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}";
-                    var arguments = $"commit -m \"{msg}\"";
-                    _executor.Git(arguments,
-                        () => { _logger.Error($"'git {arguments}' failed"); });
+                    _git.Commit(msg);
                 }
             }
 
@@ -149,24 +143,22 @@ namespace ModernRonin.ProjectRenamer
             {
                 if (_configuration.DoRunBuild)
                 {
-                    _executor.DotNet("build", () =>
+                    _dotnet.BuildSolution(() =>
                     {
                         if (_input.AskUser(
                             "dotnet build returned an error or warning - do you want to rollback all changes?")
                         )
                         {
-                            _executor.RollbackGit();
+                            _git.RollbackAllChanges();
                             _runtime.Abort();
                         }
                     });
                 }
             }
 
-            void stageAllChanges() => _executor.Git("add .");
-
             void updatePaket()
             {
-                if (isPaketUsed && !_configuration.DontRunPaketInstall) _executor.DotNet("paket install");
+                if (isPaketUsed && !_configuration.DontRunPaketInstall) _dotnet.PaketInstall();
             }
 
             void updatePaketReference()
@@ -193,24 +185,19 @@ namespace ModernRonin.ProjectRenamer
 
             void gitMove()
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(newDir));
-                _executor.Git($"mv {oldDir} {newDir}");
+                _filesystem.EnsureDirectoryExists(Path.GetDirectoryName(newDir));
+                _git.Move(oldDir, newDir);
                 var oldPath = Path.GetFileName(oldProjectPath).ToAbsolutePath(newDir);
-                if (oldPath != newProjectPath) _executor.Git($"mv {oldPath} {newProjectPath}");
+                if (oldPath != newProjectPath) _git.Move(oldPath, newProjectPath);
             }
 
             void addToSolution()
             {
-                var solutionFolderArgument = string.IsNullOrWhiteSpace(solutionFolderPath)
-                    ? string.Empty
-                    : $"-s \"{solutionFolderPath}\"";
-                solutionCommand($"add {solutionFolderArgument}", newProjectPath);
+                if (string.IsNullOrWhiteSpace(solutionFolderPath)) _dotnet.AddToSolution(newProjectPath);
+                else _dotnet.AddToSolution(newProjectPath, solutionFolderPath);
             }
 
-            void removeFromSolution() => solutionCommand("remove", oldProjectPath);
-
-            void solutionCommand(string command, string projectPath) =>
-                _executor.DotNet($"sln {command} {projectPath.EscapeForShell()}");
+            void removeFromSolution() => _dotnet.RemoveFromSolution(oldProjectPath);
 
             (bool wasFound, string projectPath, string solutionFolder) findProject()
             {
@@ -244,26 +231,10 @@ namespace ModernRonin.ProjectRenamer
 
                 return all.Except(excluded).ToArray();
 
-                string[] filesIn(string directory) =>
-                    Directory
-                        .EnumerateFiles(directory, $"*{Constants.ProjectFileExtension}",
-                            SearchOption.AllDirectories)
-                        .ToArray();
+                string[] filesIn(string directory) => _filesystem.FindProjectFiles(directory, true);
             }
         }
 
-        void EnsureGitIsClean()
-        {
-            run("update-index -q --refresh");
-            run("diff-index --quiet --cached HEAD --");
-            run("diff-files --quiet");
-            run("ls-files --exclude-standard --others");
-
-            void run(string arguments) =>
-                _executor.Git(arguments,
-                    () => _executor.Error("git does not seem to be clean, check git status"));
-        }
-
-        static string CurrentDirectoryAbsolute => Path.GetFullPath(Directory.GetCurrentDirectory());
+        string CurrentDirectoryAbsolute => Path.GetFullPath(_filesystem.CurrentDirectory);
     }
 }
