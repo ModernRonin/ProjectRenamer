@@ -1,4 +1,5 @@
 # renameproject
+[![xx](https://github.com/ModernRonin/ProjectRenamer/actions/workflows/dotnet.yml/badge.svg)
 [![NuGet](https://img.shields.io/nuget/v/ModernRonin.ProjectRenamer.svg)](https://www.nuget.org/packages/ModernRonin.ProjectRenamer/)
 [![NuGet](https://img.shields.io/nuget/dt/ModernRonin.ProjectRenamer.svg)](https://www.nuget.org/packages/ModernRonin.ProjectRenamer)
 ## Summary
