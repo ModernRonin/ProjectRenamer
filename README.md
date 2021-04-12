@@ -2,6 +2,7 @@
 ![CI Status](https://github.com/ModernRonin/ProjectRenamer/actions/workflows/dotnet.yml/badge.svg)
 [![NuGet](https://img.shields.io/nuget/v/ModernRonin.ProjectRenamer.svg)](https://www.nuget.org/packages/ModernRonin.ProjectRenamer/)
 [![NuGet](https://img.shields.io/nuget/dt/ModernRonin.ProjectRenamer.svg)](https://www.nuget.org/packages/ModernRonin.ProjectRenamer)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) 
 ## Summary
 How often have you felt the need to rename or move a C# project? If you have come here, then you know that the most important existing IDE for C#, Visual Studio,
 does not really support this scenario very well.
