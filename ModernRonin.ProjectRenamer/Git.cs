@@ -38,7 +38,7 @@ namespace ModernRonin.ProjectRenamer
 
         public string GetVersion() => Read("--version");
 
-        public void Move(string oldPath, string newPath) => Run($"mv {oldPath} {newPath}");
+        public void Move(string oldPath, string newPath) => Run($"mv \"{oldPath}\" \"{newPath}\"");
         public void RollbackAllChanges() => Run("reset --hard HEAD", () => { });
         public void StageAllChanges() => Run("add .");
 
