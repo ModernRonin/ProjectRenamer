@@ -64,7 +64,7 @@ namespace ModernRonin.ProjectRenamer
                     $"Project:                   {_configuration.OldProjectName}",
                     $"found at:                  {oldProjectPath}",
                     $"Rename to:                 {newFileName}",
-                    $"at:                        {newProjectPath})",
+                    $"at:                        {newProjectPath}",
                     $"VS Solution folder:        {solutionFolderPath ?? "none"}",
                     $"exclude:                   {_configuration.ExcludedDirectory}",
                     $"Paket in use:              {isPaketUsed.AsText()}",
@@ -205,11 +205,12 @@ namespace ModernRonin.ProjectRenamer
                 var project = solution.ProjectsInOrder.FirstOrDefault(p =>
                     p.ProjectName.EndsWith(_configuration.OldProjectName,
                         StringComparison.InvariantCultureIgnoreCase));
+                var projectAbsolutePath = Path.Combine(project.AbsolutePath.Split('\\'));
                 return project switch
                 {
                     null => (false, null, null),
-                    _ when project.ParentProjectGuid == null => (true, project.AbsolutePath, null),
-                    _ => (true, project.AbsolutePath,
+                    _ when project.ParentProjectGuid == null => (true, projectAbsolutePath, null),
+                    _ => (true, projectAbsolutePath,
                         path(solution.ProjectsByGuid[project.ParentProjectGuid]))
                 };
 
