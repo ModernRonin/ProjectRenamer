@@ -37,8 +37,11 @@ dotnet tool update --global ModernRonin.ProjectRenamer
 When I publish a new version, I always post at [my blog](https://modernronin.github.io/) under the [renameproject tag](https://modernronin.github.io/tags/renameproject/), aside from updating this readme here.
 
 ### Release History
+2.1.4:
+* bugfix: fixed issue when paths contained whitespace; thanks to [@jakubmaguza](https://github.com/jakubmaguza) for the PR - the first contribution from anyone else :-)
+
 2.1.3:
-* bugfix: fixed a bug concerning nested solution folders; thanks to @Mike-E-angelo for reporting the bug
+* bugfix: fixed a bug concerning nested solution folders; thanks to [@Mike-E-angelo](https://github.com/mike-e-angelo) for reporting the bug
 
 2.1.2:
 * bugfix: fixed another whitespace related scenario; thanks to [@sejohnson-at-griffis](https://github.com/sejohnson-at-griffis) for reporting the bug
