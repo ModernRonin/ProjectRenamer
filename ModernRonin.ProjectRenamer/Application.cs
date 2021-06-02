@@ -205,12 +205,11 @@ namespace ModernRonin.ProjectRenamer
                 var project = solution.ProjectsInOrder.FirstOrDefault(p =>
                     p.ProjectName.EndsWith(_configuration.OldProjectName,
                         StringComparison.InvariantCultureIgnoreCase));
-                var projectAbsolutePath = Path.Combine(project.AbsolutePath.Split('\\'));
                 return project switch
                 {
                     null => (false, null, null),
-                    _ when project.ParentProjectGuid == null => (true, projectAbsolutePath, null),
-                    _ => (true, projectAbsolutePath,
+                    _ when project.ParentProjectGuid == null => (true, Path.Combine(project.AbsolutePath.Split('\\')), null),
+                    _ => (true, Path.Combine(project.AbsolutePath.Split('\\')),
                         path(solution.ProjectsByGuid[project.ParentProjectGuid]))
                 };
 

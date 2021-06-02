@@ -20,22 +20,22 @@
       "commandLineArgs": "LibraryInSubFolder ProjectInSubFolder --no-commit --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "rename library, in nested solution folder starting with ., no commit": {
+    "1 rename library, in nested solution folder starting with ., no commit": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInNestedSolutionFolderWithLeadingPeriod Changed --no-commit --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "move root library to subfolder, no paket": {
+    "2 move root library to subfolder, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInRoot subfolder/LibraryInRoot --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "move and rename root library to subfolder, no paket": {
+    "3 move and rename root library to subfolder, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInRoot subfolder/ChangedLibraryInRoot --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "move solution folder root library to subfolder, no paket": {
+    "4 move solution folder root library to subfolder, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSolutionFolder subfolder/LibraryInSolutionFolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
@@ -55,7 +55,7 @@
       "commandLineArgs": "LibraryInSubfolder ./other/LibraryInSubfolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "move and rename subfolder library to other subfolder, no paket": {
+    "5 move and rename subfolder library to other subfolder, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubfolder ./other/ChangedLibraryInSubfolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
