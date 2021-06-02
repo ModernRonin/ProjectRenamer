@@ -1,21 +1,21 @@
 {
   "profiles": {
-    "rename library to project, in solution folder, no flags": {
+    "A rename library to project, in solution folder, no flags": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSolutionFolder ProjectInSolutionFolder",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "rename project to library, in solution folder, no review": {
+    "B rename project to library, in solution folder, no review": {
       "commandName": "Project",
       "commandLineArgs": "ProjectInSolutionFolder LibraryInSolutionFolder --no-review",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "rename library to project, in subfolder, no commit, build": {
+    "X1 rename library to project, in subfolder, no commit, build": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubFolder ProjectInSubFolder --no-commit --build",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "rename library to project, in subfolder, no commit, no paket": {
+    "X2 rename library to project, in subfolder, no commit, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubFolder ProjectInSubFolder --no-commit --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
@@ -40,22 +40,22 @@
       "commandLineArgs": "LibraryInSolutionFolder subfolder/LibraryInSolutionFolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "move subfolder library to root, no paket": {
+    "X3 move subfolder library to root, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubfolder ./LibraryInSubfolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "move and rename subfolder library to root, no paket": {
+    "X4 move and rename subfolder library to root, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubfolder ./ChangedLibraryInSubfolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "move subfolder library to other subfolder, no paket": {
+    "X5 move subfolder library to other subfolder, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubfolder ./other/LibraryInSubfolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
-    "move and rename subfolder library to other subfolder, no paket": {
+    "X6 move and rename subfolder library to other subfolder, no paket": {
       "commandName": "Project",
       "commandLineArgs": "LibraryInSubfolder ./other/ChangedLibraryInSubfolder --no-paket",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
