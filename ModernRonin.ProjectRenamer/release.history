@@ -1,7 +1,9 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 <PropertyGroup>
-	<Version>2.1.4</Version>
+	<Version>2.1.5</Version>
 	<PackageReleaseNotes>
+2.1.5:
+* bugfix: tool can be used on *nix platforms now without crashing; thanks to @pranav-ninja for the PR!
 2.1.4:
 * bugfix: fixed issue when paths contained whitespace; thanks to @jakubmaguza for the PR - the first contribution from anyone else :-)
 2.1.3:
