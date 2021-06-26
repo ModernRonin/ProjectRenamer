@@ -64,7 +64,7 @@ namespace ModernRonin.ProjectRenamer
                     $"Project:                   {_configuration.OldProjectName}",
                     $"found at:                  {oldProjectPath}",
                     $"Rename to:                 {newFileName}",
-                    $"at:                        {newProjectPath})",
+                    $"at:                        {newProjectPath}",
                     $"VS Solution folder:        {solutionFolderPath ?? "none"}",
                     $"exclude:                   {_configuration.ExcludedDirectory}",
                     $"Paket in use:              {isPaketUsed.AsText()}",
@@ -120,7 +120,7 @@ namespace ModernRonin.ProjectRenamer
 
             IEnumerable<string> getReferencedProjects(string project)
             {
-                var relativeReferences = _dotnet.GetReferencedProjects(project);
+                var relativeReferences = _dotnet.GetReferencedProjects(project).Select(p => p = Path.Combine(p.Split('\\')));
                 var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
                 return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
             }
@@ -208,8 +208,8 @@ namespace ModernRonin.ProjectRenamer
                 return project switch
                 {
                     null => (false, null, null),
-                    _ when project.ParentProjectGuid == null => (true, project.AbsolutePath, null),
-                    _ => (true, project.AbsolutePath,
+                    _ when project.ParentProjectGuid == null => (true, Path.Combine(project.AbsolutePath.Split('\\')), null),
+                    _ => (true, Path.Combine(project.AbsolutePath.Split('\\')),
                         path(solution.ProjectsByGuid[project.ParentProjectGuid]))
                 };
 
