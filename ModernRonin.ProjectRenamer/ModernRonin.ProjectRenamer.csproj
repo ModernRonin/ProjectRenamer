@@ -17,8 +17,8 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="Autofac" Version="6.1.0" />
-		<PackageReference Include="ModernRonin.FluentArgumentParser" Version="1.0.0" />
+		<PackageReference Include="Autofac" Version="6.4.0" />
+		<PackageReference Include="ModernRonin.FluentArgumentParser" Version="2.0.1" />
 		<PackageReference Include="morelinq" Version="3.3.2" />
 		<PackageReference Include="Sln" Version="0.3.0" />
 	</ItemGroup>

@@ -8,12 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="AutofacContrib.NSubstitute" Version="7.0.0" />
-    <PackageReference Include="FluentAssertions" Version="5.10.3" />
-    <PackageReference Include="NSubstitute" Version="4.2.2" />
-    <PackageReference Include="NSubstituteEquivalency" Version="1.0.0" />
-    <PackageReference Include="NUnit" Version="3.13.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <PackageReference Include="FluentAssertions" Version="6.7.0" />
+    <PackageReference Include="NSubstitute" Version="4.4.0" />
+    <PackageReference Include="NSubstituteEquivalency" Version="2.0.0" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.0" />
   </ItemGroup>
 
   <ItemGroup>
