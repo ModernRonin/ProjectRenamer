@@ -10,14 +10,12 @@ public class Application
     readonly IDotnet _dotnet;
     readonly IFilesystem _filesystem;
     readonly IGit _git;
-    readonly IInput _input;
     readonly ILogger _logger;
     readonly IRuntime _runtime;
     readonly ISettingsProvider _settingsProvider;
 
     public Application(IRuntime runtime,
         ILogger logger,
-        IInput input,
         IGit git,
         IDotnet dotnet,
         IFilesystem filesystem,
@@ -25,7 +23,6 @@ public class Application
     {
         _runtime = runtime;
         _logger = logger;
-        _input = input;
         _git = git;
         _dotnet = dotnet;
         _filesystem = filesystem;
@@ -102,7 +99,7 @@ public class Application
             {
                 _dotnet.BuildSolution(() =>
                 {
-                    if (_input.AskUser(
+                    if (_runtime.AskUser(
                             "dotnet build returned an error or warning - do you want to rollback all changes?")
                        )
                     {

@@ -8,23 +8,23 @@ public sealed class SettingsProvider : ISettingsProvider
     readonly IErrorHandler _errors;
     readonly IFilesystem _filesystem;
     readonly IGit _git;
-    readonly IInput _input;
     readonly IInputSource _inputSource;
     readonly IProjectFinder _projectFinder;
+    readonly IRuntime _runtimer;
 
     public SettingsProvider(IInputSource inputSource,
         IErrorHandler errors,
         IFilesystem filesystem,
         IGit git,
-        IInput input,
-        IProjectFinder projectFinder)
+        IProjectFinder projectFinder,
+        IRuntime runtimer)
     {
         _inputSource = inputSource;
         _errors = errors;
         _filesystem = filesystem;
         _git = git;
-        _input = input;
         _projectFinder = projectFinder;
+        _runtimer = runtimer;
     }
 
     public Settings GetSettings()
@@ -61,7 +61,7 @@ public sealed class SettingsProvider : ISettingsProvider
                 "-----------------------------------------------",
                 "Do you want to continue with the rename operation?"
             };
-            if (!_input.AskUser(string.Join(Environment.NewLine, lines)))
+            if (!_runtime.AskUser(string.Join(Environment.NewLine, lines)))
                 _errors.Handle("You decided to abort.");
         }
 
