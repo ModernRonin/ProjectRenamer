@@ -10,21 +10,21 @@ public sealed class SettingsProvider : ISettingsProvider
     readonly IGit _git;
     readonly IInputSource _inputSource;
     readonly IProjectFinder _projectFinder;
-    readonly IRuntime _runtimer;
+    readonly IRuntime _runtime;
 
     public SettingsProvider(IInputSource inputSource,
         IErrorHandler errors,
         IFilesystem filesystem,
         IGit git,
         IProjectFinder projectFinder,
-        IRuntime runtimer)
+        IRuntime runtime)
     {
         _inputSource = inputSource;
         _errors = errors;
         _filesystem = filesystem;
         _git = git;
         _projectFinder = projectFinder;
-        _runtimer = runtimer;
+        _runtime = runtime;
     }
 
     public Settings GetSettings()
