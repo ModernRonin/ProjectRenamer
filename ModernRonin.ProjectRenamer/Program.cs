@@ -1,26 +1,26 @@
 ﻿using System;
 using Autofac;
 
-namespace ModernRonin.ProjectRenamer
+namespace ModernRonin.ProjectRenamer;
+
+class Program
 {
-    class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            var container = WireUp();
-            var setup = container.Resolve<IConfigurationSetup>();
-            var (configuration, solutionPath) = setup.Get(args);
-            if (configuration == default) return;
+        var container = WireUp();
+        var setup = container.Resolve<IConfigurationSetup>();
+        var (configuration, solutionPath) = setup.Get(args);
+        if (configuration == default) return;
 
-            container.Resolve<Func<Configuration, string, Application>>()(configuration, solutionPath)
-                .Run();
-        }
+        var applicationFactory = container.Resolve<Func<Configuration, string, Application>>();
+        var application = applicationFactory(configuration, solutionPath);
+        application.Run();
+    }
 
-        static IContainer WireUp()
-        {
-            var builder = new ContainerBuilder();
-            builder.RegisterModule<RenamerModule>();
-            return builder.Build();
-        }
+    static IContainer WireUp()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterModule<RenamerModule>();
+        return builder.Build();
     }
 }
