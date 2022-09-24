@@ -53,7 +53,7 @@ namespace ModernRonin.ProjectRenamer
                 : Path.GetDirectoryName(oldDir);
             var newDir = _configuration.NewProjectName.ToAbsolutePath(newBase);
             var newFileName = Path.GetFileName(_configuration.NewProjectName);
-            var newProjectPath = Path.Combine(newDir, $"{newFileName}{Constants.ProjectFileExtension}");
+            var newProjectPath = Path.Combine(newDir, $"{newFileName}{_configuration.ProjectFileExtension}");
             var isPaketUsed = _filesystem.DoesDirectoryExist(".paket");
             var gitVersion = _git.GetVersion();
             if (!_configuration.DontReviewSettings)
@@ -231,7 +231,7 @@ namespace ModernRonin.ProjectRenamer
 
                 return all.Except(excluded).ToArray();
 
-                string[] filesIn(string directory) => _filesystem.FindProjectFiles(directory, true);
+                string[] filesIn(string directory) => _filesystem.FindProjectFiles(directory, true, _configuration.ProjectFileExtension);
             }
         }
 

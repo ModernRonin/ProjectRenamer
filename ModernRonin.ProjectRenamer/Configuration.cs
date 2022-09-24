@@ -9,5 +9,6 @@
         public string ExcludedDirectory { get; set; } = string.Empty;
         public string NewProjectName { get; set; }
         public string OldProjectName { get; set; }
+        public string ProjectFileExtension { get; set; } = Constants.ProjectFileExtension;
     }
 }

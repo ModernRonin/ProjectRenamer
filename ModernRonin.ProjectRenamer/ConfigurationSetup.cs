@@ -44,8 +44,8 @@ namespace ModernRonin.ProjectRenamer
                             $"Do not specify paths for input/'old' project names, please.{Environment.NewLine}{Environment.NewLine}{helpOverview}");
                     }
 
-                    configuration.OldProjectName = RemoveProjectFileExtension(configuration.OldProjectName);
-                    configuration.NewProjectName = RemoveProjectFileExtension(configuration.NewProjectName);
+                    configuration.OldProjectName = RemoveProjectFileExtension(configuration.OldProjectName, configuration.ProjectFileExtension);
+                    configuration.NewProjectName = RemoveProjectFileExtension(configuration.NewProjectName, configuration.ProjectFileExtension);
 
                     return (configuration, solutionPath);
                 default:
@@ -97,12 +97,18 @@ namespace ModernRonin.ProjectRenamer
                 .WithShortName("e")
                 .WithHelp(
                     "exclude this directory from project reference updates; must be a relative path to the current directory");
+            cfg.Parameter(c => c.ProjectFileExtension)
+                .MakeOptional()
+                .WithLongName("project-extension")
+                .WithShortName("pe")
+                .ExpectAt(3)
+                .WithHelp("the file extension for the project, ex: .csproj, .vbproj");
             return (parser.HelpOverview, parser.Parse(args));
         }
 
-        static string RemoveProjectFileExtension(string projectName) =>
-            projectName.EndsWith(Constants.ProjectFileExtension, StringComparison.InvariantCultureIgnoreCase)
-                ? projectName[..^Constants.ProjectFileExtension.Length]
+        static string RemoveProjectFileExtension(string projectName, string projectFileExtension) =>
+            projectName.EndsWith(projectFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                ? projectName[..^projectFileExtension.Length]
                 : projectName;
     }
 }

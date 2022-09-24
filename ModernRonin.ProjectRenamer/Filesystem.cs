@@ -9,9 +9,9 @@ namespace ModernRonin.ProjectRenamer
         public bool DoesDirectoryExist(string directory) => Directory.Exists(directory);
         public void EnsureDirectoryExists(string directory) => Directory.CreateDirectory(directory);
 
-        public string[] FindProjectFiles(string directory, bool doRecurse) =>
+        public string[] FindProjectFiles(string directory, bool doRecurse, string projectFileExtension) =>
             Directory
-                .EnumerateFiles(directory, $"*{Constants.ProjectFileExtension}", SearchOption(doRecurse))
+                .EnumerateFiles(directory, $"*{projectFileExtension}", SearchOption(doRecurse))
                 .ToArray();
 
         public string[] FindSolutionFiles(string directory, bool doRecurse) =>
