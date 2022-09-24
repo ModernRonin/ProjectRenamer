@@ -5,9 +5,12 @@ using Microsoft.Build.Construction;
 
 namespace ModernRonin.ProjectRenamer;
 
+/// <summary>
+///     Unfortunately, untestable because SolutionFile is not public constructable
+/// </summary>
 public sealed class ProjectFinder : IProjectFinder
 {
-    public ProjectInfo FindProject(string solutionPath, string projectName)
+    public Project FindProject(string solutionPath, string projectName)
     {
         var solution = SolutionFile.Parse(solutionPath);
         var project = solution.ProjectsInOrder.FirstOrDefault(matchesProject);
@@ -17,7 +20,7 @@ public sealed class ProjectFinder : IProjectFinder
         var solutionFolder = project.ParentProjectGuid is null
             ? null
             : solutionFolderPath(solution.ProjectsByGuid[project.ParentProjectGuid]);
-        return new ProjectInfo(projectPath, solutionFolder);
+        return new Project(projectPath, solutionFolder, Path.GetExtension(project.AbsolutePath));
 
         string solutionFolderPath(ProjectInSolution p)
         {

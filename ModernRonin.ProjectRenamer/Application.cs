@@ -41,10 +41,7 @@ public class Application
     public void Run()
     {
         _git.EnsureIsClean();
-
-        var (oldProjectPath, solutionFolderPath, oldDir, newDir, newProjectPath, isPaketUsed) =
-            _settingsProvider.GetSettings(_solutionPath);
-
+        var settings = _settingsProvider.GetSettings(_solutionPath);
         var (dependents, dependencies) = analyzeReferences();
         removeFromSolution();
         removeOldReferences();
@@ -59,14 +56,14 @@ public class Application
 
         void addNewReferences()
         {
-            dependents.ForEach(p => _dotnet.AddReference(p, newProjectPath));
-            dependencies.ForEach(d => _dotnet.AddReference(newProjectPath, d));
+            dependents.ForEach(p => _dotnet.AddReference(p, settings.Destination.FullPath));
+            dependencies.ForEach(d => _dotnet.AddReference(settings.Destination.FullPath, d));
         }
 
         void removeOldReferences()
         {
-            dependents.ForEach(p => _dotnet.RemoveReference(p, oldProjectPath));
-            dependencies.ForEach(d => _dotnet.RemoveReference(oldProjectPath, d));
+            dependents.ForEach(p => _dotnet.RemoveReference(p, settings.Source.FullPath));
+            dependencies.ForEach(d => _dotnet.RemoveReference(settings.Source.FullPath, d));
         }
 
         (string[] dependents, string[] dependencies) analyzeReferences()
@@ -76,13 +73,13 @@ public class Application
 
             return (
                 allProjects().Where(doesNotEqualOldProjectPath).Where(hasReferenceToOldProject).ToArray(),
-                getReferencedProjects(oldProjectPath).ToArray());
+                getReferencedProjects(settings.Source.FullPath).ToArray());
 
             bool hasReferenceToOldProject(string p) => getReferencedProjects(p).Any(doesEqualOldProjectPath);
         }
 
         bool doesNotEqualOldProjectPath(string what) => !doesEqualOldProjectPath(what);
-        bool doesEqualOldProjectPath(string what) => arePathsEqual(what, oldProjectPath);
+        bool doesEqualOldProjectPath(string what) => arePathsEqual(what, settings.Source.FullPath);
 
         IEnumerable<string> getReferencedProjects(string project)
         {
@@ -100,7 +97,7 @@ public class Application
             {
                 var wasMove = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator);
                 var msg = wasMove
-                    ? $"Moved {oldProjectPath.ToRelativePath(_filesystem.CurrentDirectory)} to {newProjectPath.ToRelativePath(_filesystem.CurrentDirectory)}"
+                    ? $"Moved {settings.Source.FullPath.ToRelativePath(_filesystem.CurrentDirectory)} to {settings.Destination.FullPath.ToRelativePath(_filesystem.CurrentDirectory)}"
                     : $"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}";
                 _git.Commit(msg);
             }
@@ -125,18 +122,19 @@ public class Application
 
         void updatePaket()
         {
-            if (isPaketUsed && !_configuration.DontRunPaketInstall) _dotnet.PaketInstall();
+            if (settings.DoPaketInstall) _dotnet.PaketInstall();
         }
 
         void updatePaketReference()
         {
-            if (!isPaketUsed) return;
+            if (!settings.IsPaketUsed) return;
             const string restoreTargets = @"\.paket\Paket.Restore.targets";
-            var nesting = Path.GetFullPath(newProjectPath).Count(CommonExtensions.IsDirectorySeparator) -
-                          _filesystem.CurrentDirectory.Count(CommonExtensions.IsDirectorySeparator)     - 1;
+            var nesting = Path.GetFullPath(settings.Destination.FullPath)
+                              .Count(CommonExtensions.IsDirectorySeparator)                         -
+                          _filesystem.CurrentDirectory.Count(CommonExtensions.IsDirectorySeparator) - 1;
             var paketPath = @"..\".Repeat(nesting)[..^1] + restoreTargets;
-            var lines = File.ReadAllLines(newProjectPath).Select(fixup);
-            File.WriteAllLines(newProjectPath, lines);
+            var lines = File.ReadAllLines(settings.Destination.FullPath).Select(fixup);
+            File.WriteAllLines(settings.Destination.FullPath, lines);
 
             string fixup(string line) =>
                 isPaketReference(line) ? $"<Import Project=\"{paketPath}\" />" : line;
@@ -152,19 +150,21 @@ public class Application
 
         void gitMove()
         {
-            _filesystem.EnsureDirectoryExists(Path.GetDirectoryName(newDir));
-            _git.Move(oldDir, newDir);
-            var oldPath = Path.GetFileName(oldProjectPath).ToAbsolutePath(newDir);
-            if (oldPath != newProjectPath) _git.Move(oldPath, newProjectPath);
+            _filesystem.EnsureDirectoryExists(Path.GetDirectoryName(settings.Destination.Directory));
+            _git.Move(settings.Source.Directory, settings.Destination.Directory);
+            var oldPath = Path.GetFileName(settings.Source.FullPath)
+                .ToAbsolutePath(settings.Destination.Directory);
+            if (oldPath != settings.Destination.FullPath) _git.Move(oldPath, settings.Destination.FullPath);
         }
 
         void addToSolution()
         {
-            if (string.IsNullOrWhiteSpace(solutionFolderPath)) _dotnet.AddToSolution(newProjectPath);
-            else _dotnet.AddToSolution(newProjectPath, solutionFolderPath);
+            if (string.IsNullOrWhiteSpace(settings.Destination.SolutionFolder))
+                _dotnet.AddToSolution(settings.Destination.FullPath);
+            else _dotnet.AddToSolution(settings.Destination.FullPath, settings.Destination.SolutionFolder);
         }
 
-        void removeFromSolution() => _dotnet.RemoveFromSolution(oldProjectPath);
+        void removeFromSolution() => _dotnet.RemoveFromSolution(settings.Source.FullPath);
 
         string[] allProjects()
         {
