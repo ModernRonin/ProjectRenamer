@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 
 namespace ModernRonin.ProjectRenamer;
 
@@ -30,34 +29,35 @@ public sealed class SettingsProvider : ISettingsProvider
 
     public Settings GetSettings(string solutionPath)
     {
-        var oldProject = _projectFinder.FindProject(solutionPath, _configuration.OldProjectName);
-        if (oldProject is null)
+        var source = _projectFinder.FindProject(solutionPath, _configuration.OldProjectName);
+        if (source is null)
             _errors.Handle($"{_configuration.OldProjectName} cannot be found in the solution");
 
-        var oldDir = Path.GetDirectoryName(oldProject.Path);
-        var newBaseDir = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator)
-            ? _filesystem.CurrentDirectory
-            : Path.GetDirectoryName(oldDir);
-        var newDir = _configuration.NewProjectName.ToAbsolutePath(newBaseDir);
-        var newFileName = Path.GetFileName(_configuration.NewProjectName);
-        var newProjectPath = Path.Combine(newDir, $"{newFileName}{_configuration.ProjectFileExtension}");
-        var isPaketUsed = _filesystem.DoesDirectoryExist(".paket");
+        var result = new Settings
+        {
+            DoCreateCommit = !_configuration.DontCreateCommit,
+            DoBuild = _configuration.DoRunBuild,
+            ExcludedDirectory = _configuration.ExcludedDirectory,
+            DoPaketInstall = !_configuration.DontRunPaketInstall && _filesystem.DoesDirectoryExist(".paket"),
+            IsPaketUsed = _filesystem.DoesDirectoryExist(".paket"),
+            Source = source,
+            Destination = source.Rename(_configuration.NewProjectName, _filesystem.CurrentDirectory)
+        };
         var gitVersion = _git.GetVersion();
         if (!_configuration.DontReviewSettings)
         {
             var lines = new[]
             {
                 "Please review the following settings:",
-                $"Project:                   {_configuration.OldProjectName}",
-                $"found at:                  {oldProject.Path}",
-                $"Rename to:                 {newFileName}",
-                $"at:                        {newProjectPath}",
-                $"VS Solution folder:        {oldProject.SolutionFolder ?? "none"}",
-                $"exclude:                   {_configuration.ExcludedDirectory}",
-                $"Paket in use:              {isPaketUsed.AsText()}",
-                $"Run paket install:         {(!_configuration.DontRunPaketInstall).AsText()}",
-                $"Run build after rename:    {_configuration.DoRunBuild.AsText()}",
-                $"Create automatic commit:   {(!_configuration.DontCreateCommit).AsText()}",
+                $"Project:                   {result.Source.Name}",
+                $"found at:                  {result.Source.FullPath}",
+                $"Rename to:                 {Path.GetFileName(result.Destination.FullPath)}",
+                $"at:                        {result.Destination.Directory}",
+                $"VS Solution folder:        {result.Source.SolutionFolder ?? "none"}",
+                $"exclude:                   {result.ExcludedDirectory}",
+                $"Run paket install:         {result.DoPaketInstall.AsText()}",
+                $"Run build after rename:    {result.DoBuild.AsText()}",
+                $"Create automatic commit:   {result.DoCreateCommit.AsText()}",
                 $"Git version:               {gitVersion}",
                 "-----------------------------------------------",
                 "Do you want to continue with the rename operation?"
@@ -66,7 +66,6 @@ public sealed class SettingsProvider : ISettingsProvider
                 _errors.Handle("You decided to abort.");
         }
 
-        return new Settings(oldProject.Path, oldProject.SolutionFolder, oldDir, newDir, newProjectPath,
-            isPaketUsed);
+        return result;
     }
 }

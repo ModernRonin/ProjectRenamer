@@ -2,5 +2,5 @@
 
 public interface IProjectFinder
 {
-    ProjectInfo FindProject(string solutionPath, string projectName);
+    Project FindProject(string solutionPath, string projectName);
 }
