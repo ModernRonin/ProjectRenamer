@@ -8,7 +8,6 @@ public class RenamerModule : Module
     {
         builder.RegisterType<ConsoleWrapper>().AsImplementedInterfaces();
         builder.RegisterType<Runtime>().AsImplementedInterfaces();
-        builder.RegisterType<Executor>().AsImplementedInterfaces();
         builder.RegisterType<ErrorHandler>().AsImplementedInterfaces();
         builder.RegisterType<ConfigurationSetup>().AsImplementedInterfaces();
         builder.RegisterType<Git>().AsImplementedInterfaces();
