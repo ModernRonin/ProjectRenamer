@@ -6,10 +6,9 @@ namespace ModernRonin.ProjectRenamer;
 
 public class Dotnet : IDotnet
 {
-    const string ToolDotnet = "dotnet";
     readonly IToolRunner _runner;
 
-    public Dotnet(Func<string, IToolRunner> toolRunnerFactory) => _runner = toolRunnerFactory(ToolDotnet);
+    public Dotnet(Func<string, IToolRunner> toolRunnerFactory) => _runner = toolRunnerFactory("dotnet");
 
     public void AddReference(string project, string reference) =>
         ProjectReferenceCommand("add", project, reference);
