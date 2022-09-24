@@ -11,7 +11,7 @@ This tool takes care of this for you, provided your use-case follows a set of fa
 * you use **git** as a repository and have `git`(the executable) on your PATH
 * your `csproj` files have the same name as the folder in which they reside together with accompanying source code
 * you don't have more than one solution file (`.sln`) in one directory
-* you have **dotnetcore 3.1** or above (note that once net6 is out, this tool will be switched to require net5; by that time, I assume widespread enough adoption)
+* you have **dotnetcore 3.1** or above (**note: as we are approaching the release of net7, I will soon upgrade the tool to net6)
 * your solution does not contain nested solution folders - the tool currently has an issue with that and will fail; until I find the time to fix that, the 
 workaround is simply to move the nested solution folder to top-level via VS, run the tool, and then move the solution folder back;seeing as this is two 
 simple drag-and-drops that only change the solution file, I hope this is acceptable.
@@ -128,7 +128,7 @@ renameproject ModernRonin.ProjectRenamer src/ModernRonin.RenameProject
 In some situations, for example if your repository contains a separate solution with separate projects in a subdirectory, you want to exclude a directory completely from being looked at by the project reference update mechanism. In that case, you can specify that directory with the optional `--exclude` argument.
 
 ### Use with VB projects
-Thanks to a PR from [@fsbflavio](https://github.com/fsbflavio) you can rename Visual Basic projects now, too:
+Since version 2.2.0, you can rename Visual Basic projects now, too, thanks to a PR from [@fsbflavio](https://github.com/fsbflavio):
 
 ```shell
 renameproject ModernRonin.ProjectRenamer ModernRonin.RenameProject --project
