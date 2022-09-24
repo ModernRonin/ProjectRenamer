@@ -13,7 +13,20 @@ public class Runtime : IRuntime
 
     public void Abort(int exitCode = -1) => Environment.Exit(exitCode);
 
-    public void DoWithTool(string tool,
+    public void Run(string tool, string arguments, Action onNonZeroExitCode)
+    {
+        DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = false, _ => { });
+    }
+
+    public string RunAndGetOutput(string tool, string arguments, Action onNonZeroExitCode)
+    {
+        var result = string.Empty;
+        DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,
+            o => result = o);
+        return result;
+    }
+
+    void DoWithTool(string tool,
         string arguments,
         Action onNonZeroExitCode,
         Action<ProcessStartInfo> configure,
@@ -49,18 +62,5 @@ public class Runtime : IRuntime
             _logger.Error($"{tool} could not be found - make sure it's on your PATH.");
             onNonZeroExitCode();
         }
-    }
-
-    public void Run(string tool, string arguments, Action onNonZeroExitCode)
-    {
-        DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = false, _ => { });
-    }
-
-    public string RunAndGetOutput(string tool, string arguments, Action onNonZeroExitCode)
-    {
-        var result = string.Empty;
-        DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,
-            o => result = o);
-        return result;
     }
 }
