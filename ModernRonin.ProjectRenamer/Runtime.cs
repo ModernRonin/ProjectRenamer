@@ -50,4 +50,17 @@ public class Runtime : IRuntime
             onNonZeroExitCode();
         }
     }
+
+    public void Run(string tool, string arguments, Action onNonZeroExitCode)
+    {
+        DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = false, _ => { });
+    }
+
+    public string RunAndGetOutput(string tool, string arguments, Action onNonZeroExitCode)
+    {
+        var result = string.Empty;
+        DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,
+            o => result = o);
+        return result;
+    }
 }

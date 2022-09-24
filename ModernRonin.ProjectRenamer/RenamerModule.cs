@@ -14,6 +14,7 @@ public class RenamerModule : Module
         builder.RegisterType<Git>().AsImplementedInterfaces();
         builder.RegisterType<Dotnet>().AsImplementedInterfaces();
         builder.RegisterType<Filesystem>().AsImplementedInterfaces();
+        builder.RegisterType<ToolRunner>().AsImplementedInterfaces();
         builder.RegisterType<Application>().AsSelf();
         builder.RegisterInstance(CommandLineArguments.CreateParser());
     }
