@@ -29,6 +29,6 @@ public class RenamerModuleTests
     [Test]
     public void IConfigurationSetup_can_be_resolved()
     {
-        _container.Resolve<IConfigurationSetup>().Should().NotBeNull();
+        _container.Resolve<IInputSource>().Should().NotBeNull();
     }
 }

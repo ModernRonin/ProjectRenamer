@@ -6,7 +6,7 @@ using ModernRonin.FluentArgumentParser.Parsing;
 
 namespace ModernRonin.ProjectRenamer;
 
-public class ConfigurationSetup : IConfigurationSetup
+public class InputSource : IInputSource
 {
     readonly ILogger _console;
     readonly IErrorHandler _errors;
@@ -14,7 +14,7 @@ public class ConfigurationSetup : IConfigurationSetup
     readonly IBindingCommandLineParser _parser;
     readonly IRuntime _runtime;
 
-    public ConfigurationSetup(ILogger console,
+    public InputSource(ILogger console,
         IRuntime runtime,
         IErrorHandler errors,
         IFilesystem filesystem,
@@ -27,7 +27,7 @@ public class ConfigurationSetup : IConfigurationSetup
         _parser = parser;
     }
 
-    public (Verb configuration, string solutionPath) Get(string[] commandLineArguments)
+    public UserInput Get(string[] commandLineArguments)
     {
         var solutionFiles = _filesystem.FindSolutionFiles(".", false);
         if (1 != solutionFiles.Length)
@@ -39,19 +39,19 @@ public class ConfigurationSetup : IConfigurationSetup
                 _console.Info(help.Text);
                 _runtime.Abort(help.IsResultOfInvalidInput ? -1 : 0);
                 break;
-            case (var helpOverview, Verb configuration):
-                if (configuration.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))
+            case (var helpOverview, Verb verb):
+                if (verb.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))
                 {
                     _errors.Handle(
                         $"Do not specify paths for input/'old' project names, please.{Environment.NewLine}{Environment.NewLine}{helpOverview}");
                 }
 
-                configuration.OldProjectName = RemoveProjectFileExtension(configuration.OldProjectName,
-                    configuration.ProjectFileExtension);
-                configuration.NewProjectName = RemoveProjectFileExtension(configuration.NewProjectName,
-                    configuration.ProjectFileExtension);
+                verb.OldProjectName = RemoveProjectFileExtension(verb.OldProjectName,
+                    verb.ProjectFileExtension);
+                verb.NewProjectName = RemoveProjectFileExtension(verb.NewProjectName,
+                    verb.ProjectFileExtension);
 
-                return (configuration, solutionPath);
+                return new UserInput(verb, solutionPath);
             default:
                 _errors.Handle(
                     "Something went seriously wrong. Please create an issue at https://github.com/ModernRonin/ProjectRenamer with as much detail as possible.");

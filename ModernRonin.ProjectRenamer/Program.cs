@@ -8,7 +8,7 @@ class Program
     static void Main(string[] args)
     {
         var container = WireUp();
-        var setup = container.Resolve<IConfigurationSetup>();
+        var setup = container.Resolve<IInputSource>();
         var (configuration, solutionPath) = setup.Get(args);
         if (configuration == default) return;
 
