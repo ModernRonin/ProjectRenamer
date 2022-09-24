@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Microsoft.Build.Construction;
 
 namespace ModernRonin.ProjectRenamer;
 
@@ -12,26 +11,30 @@ public sealed class SettingsProvider : ISettingsProvider
     readonly IFilesystem _filesystem;
     readonly IGit _git;
     readonly IInput _input;
+    readonly IProjectFinder _projectFinder;
 
     public SettingsProvider(Configuration configuration,
         IErrorHandler errors,
         IFilesystem filesystem,
         IGit git,
-        IInput input)
+        IInput input,
+        IProjectFinder projectFinder)
     {
         _configuration = configuration;
         _errors = errors;
         _filesystem = filesystem;
         _git = git;
         _input = input;
+        _projectFinder = projectFinder;
     }
 
     public Settings GetSettings(string solutionPath)
     {
-        var (wasFound, oldProjectPath, solutionFolderPath) = findProject();
-        if (!wasFound) _errors.Handle($"{_configuration.OldProjectName} cannot be found in the solution");
+        var oldProject = _projectFinder.FindProject(solutionPath, _configuration.OldProjectName);
+        if (oldProject is null)
+            _errors.Handle($"{_configuration.OldProjectName} cannot be found in the solution");
 
-        var oldDir = Path.GetDirectoryName(oldProjectPath);
+        var oldDir = Path.GetDirectoryName(oldProject.Path);
         var newBaseDir = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator)
             ? _filesystem.CurrentDirectory
             : Path.GetDirectoryName(oldDir);
@@ -46,10 +49,10 @@ public sealed class SettingsProvider : ISettingsProvider
             {
                 "Please review the following settings:",
                 $"Project:                   {_configuration.OldProjectName}",
-                $"found at:                  {oldProjectPath}",
+                $"found at:                  {oldProject.Path}",
                 $"Rename to:                 {newFileName}",
                 $"at:                        {newProjectPath}",
-                $"VS Solution folder:        {solutionFolderPath ?? "none"}",
+                $"VS Solution folder:        {oldProject.SolutionFolder ?? "none"}",
                 $"exclude:                   {_configuration.ExcludedDirectory}",
                 $"Paket in use:              {isPaketUsed.AsText()}",
                 $"Run paket install:         {(!_configuration.DontRunPaketInstall).AsText()}",
@@ -63,31 +66,7 @@ public sealed class SettingsProvider : ISettingsProvider
                 _errors.Handle("You decided to abort.");
         }
 
-        return new Settings(oldProjectPath, solutionFolderPath, oldDir, newDir, newProjectPath, isPaketUsed);
-
-        (bool wasFound, string projectPath, string solutionFolder) findProject()
-        {
-            var solution = SolutionFile.Parse(solutionPath);
-            var project = solution.ProjectsInOrder.FirstOrDefault(p =>
-                p.ProjectName.EndsWith(_configuration.OldProjectName,
-                    StringComparison.InvariantCultureIgnoreCase));
-            return project switch
-            {
-                null => (false, null, null),
-                _ when project.ParentProjectGuid == null => (true,
-                    Path.Combine(project.AbsolutePath.Split('\\')),
-                    null),
-                _ => (true, Path.Combine(project.AbsolutePath.Split('\\')),
-                    path(solution.ProjectsByGuid[project.ParentProjectGuid]))
-            };
-
-            string path(ProjectInSolution p)
-            {
-                if (p.ParentProjectGuid == null) return p.ProjectName;
-                var parent = solution.ProjectsByGuid[p.ParentProjectGuid];
-                var parentPath = path(parent);
-                return $"{parentPath}/{p.ProjectName}";
-            }
-        }
+        return new Settings(oldProject.Path, oldProject.SolutionFolder, oldDir, newDir, newProjectPath,
+            isPaketUsed);
     }
 }
