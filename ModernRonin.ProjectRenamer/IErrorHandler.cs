@@ -1,9 +1,21 @@
-﻿namespace ModernRonin.ProjectRenamer
+﻿using JetBrains.Annotations;
+
+namespace ModernRonin.ProjectRenamer;
+
+public interface IErrorHandler
 {
-    public interface IErrorHandler
-    {
-        void Handle(string msg);
-        void Handle(string tool, string arguments);
-        void HandleAndReset(string msg);
-    }
+    /// <summary>
+    ///     Will also exit the process.
+    /// </summary>
+    [ContractAnnotation("=> halt")]
+    void Handle(string msg);
+
+    /// <summary>
+    ///     Will also exit the process.
+    /// </summary>
+    [ContractAnnotation("=> halt")]
+    void Handle(string tool, string arguments);
+
+    [ContractAnnotation("=> halt")]
+    void HandleAndReset(string msg);
 }
