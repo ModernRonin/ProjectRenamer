@@ -9,6 +9,7 @@ public class RenamerModule : Module
         builder.RegisterType<Runtime>().AsImplementedInterfaces();
         builder.RegisterType<ErrorHandler>().AsImplementedInterfaces();
         builder.RegisterType<ConfigurationSetup>().AsImplementedInterfaces();
+        builder.RegisterType<SettingsProvider>().AsImplementedInterfaces();
         builder.RegisterType<Git>().AsImplementedInterfaces();
         builder.RegisterType<Dotnet>().AsImplementedInterfaces();
         builder.RegisterType<Filesystem>().AsImplementedInterfaces();
