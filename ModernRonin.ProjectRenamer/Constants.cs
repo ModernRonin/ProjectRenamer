@@ -1,8 +1,7 @@
-﻿namespace ModernRonin.ProjectRenamer
+﻿namespace ModernRonin.ProjectRenamer;
+
+public static class Constants
 {
-    public static class Constants
-    {
-        public const string ProjectFileExtension = ".csproj";
-        public const string SolutionFileExtension = ".sln";
-    }
+    public const string CSharpProjectFileExtension = ".csproj";
+    public const string SolutionFileExtension = ".sln";
 }
