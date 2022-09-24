@@ -9,28 +9,32 @@ namespace ModernRonin.ProjectRenamer;
 ///     Unfortunately, this is fundamentally untestable, but at least we've concentrated all the untestable stuff into one
 ///     type.
 /// </summary>
-public class Runtime : IRuntime
+public class Runtime : IRuntime, ILogger, IInput
 {
-    readonly ILogger _logger;
-
-    public Runtime(ILogger logger) => _logger = logger;
-
     public void Abort(int exitCode = -1) => Environment.Exit(exitCode);
 
-    public void Run(string tool, string arguments, Action onNonZeroExitCode)
+    public bool AskUser(string question)
     {
-        DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = false, _ => { });
+        Console.WriteLine($"{question} [Enter=Yes, any other key=No]");
+        var key = Console.ReadKey();
+        return key.Key == ConsoleKey.Enter;
     }
+
+    public void Error(string msg) => Console.Error.WriteLine(msg);
+    public void Info(string msg) => Console.WriteLine(msg);
+
+    public void Run(string tool, string arguments, Action onNonZeroExitCode) =>
+        Run(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = false, _ => { });
 
     public string RunAndGetOutput(string tool, string arguments, Action onNonZeroExitCode)
     {
         var result = string.Empty;
-        DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,
+        Run(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,
             o => result = o);
         return result;
     }
 
-    void DoWithTool(string tool,
+    void Run(string tool,
         string arguments,
         Action onNonZeroExitCode,
         Action<ProcessStartInfo> configure,
@@ -63,7 +67,7 @@ public class Runtime : IRuntime
 
         void onProcessStartProblem()
         {
-            _logger.Error($"{tool} could not be found - make sure it's on your PATH.");
+            Error($"{tool} could not be found - make sure it's on your PATH.");
             onNonZeroExitCode();
         }
     }
