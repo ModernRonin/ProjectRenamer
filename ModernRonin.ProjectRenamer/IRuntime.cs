@@ -11,6 +11,6 @@ namespace ModernRonin.ProjectRenamer
             string arguments,
             Action onNonZeroExitCode,
             Action<ProcessStartInfo> configure,
-            Action<Process> onSuccess);
+            Action<string> onSuccess);
     }
 }
