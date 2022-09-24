@@ -26,7 +26,7 @@ namespace ModernRonin.ProjectRenamer
         {
             var result = string.Empty;
             _runtime.DoWithTool(tool, arguments, onNonZeroExitCode, psi => psi.RedirectStandardOutput = true,
-                p => result = p.StandardOutput.ReadToEnd());
+                p => result = p);
             return result;
         }
     }

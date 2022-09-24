@@ -5,6 +5,11 @@
       "commandLineArgs": "LibraryInSolutionFolder ProjectInSolutionFolder",
       "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
     },
+    "rename library to project, in solution folder, .vbproj": {
+      "commandName": "Project",
+      "commandLineArgs": "LibraryInSolutionFolder ProjectInSolutionFolder --project-extension=.vbproj",
+      "workingDirectory": "C:\\Projects\\Github\\ProjectRenamerTestBed"
+    },
     "rename project to library, in solution folder, no review": {
       "commandName": "Project",
       "commandLineArgs": "ProjectInSolutionFolder LibraryInSolutionFolder --no-review",
