@@ -17,7 +17,7 @@ namespace ModernRonin.ProjectRenamer
             string arguments,
             Action onNonZeroExitCode,
             Action<ProcessStartInfo> configure,
-            Action<Process> onSuccess)
+            Action<string> onSuccess)
         {
             var psi = new ProcessStartInfo
             {
@@ -30,9 +30,13 @@ namespace ModernRonin.ProjectRenamer
             try
             {
                 var process = Process.Start(psi);
+                string output = "";
+                if (psi.RedirectStandardOutput)
+                    output = process.StandardOutput.ReadToEnd();
+
                 process.WaitForExit();
                 if (process.ExitCode != 0) onNonZeroExitCode();
-                else onSuccess(process);
+                else onSuccess(output);
             }
             catch (Win32Exception)
             {
