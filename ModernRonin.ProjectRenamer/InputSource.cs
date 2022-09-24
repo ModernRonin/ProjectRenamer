@@ -8,6 +8,7 @@ namespace ModernRonin.ProjectRenamer;
 
 public class InputSource : IInputSource
 {
+    readonly string[] _commandLineArguments;
     readonly ILogger _console;
     readonly IErrorHandler _errors;
     readonly IFilesystem _filesystem;
@@ -18,22 +19,24 @@ public class InputSource : IInputSource
         IRuntime runtime,
         IErrorHandler errors,
         IFilesystem filesystem,
-        IBindingCommandLineParser parser)
+        IBindingCommandLineParser parser,
+        string[] commandLineArguments)
     {
         _console = console;
         _runtime = runtime;
         _errors = errors;
         _filesystem = filesystem;
         _parser = parser;
+        _commandLineArguments = commandLineArguments;
     }
 
-    public UserInput Get(string[] commandLineArguments)
+    public UserInput Get()
     {
         var solutionFiles = _filesystem.FindSolutionFiles(".", false);
         if (1 != solutionFiles.Length)
             _errors.Handle("Needs to be run from a directory with exactly one *.sln file in it.");
         var solutionPath = Path.GetFullPath(solutionFiles.First());
-        switch (_parser.HelpOverview, _parser.Parse(commandLineArguments))
+        switch (_parser.HelpOverview, _parser.Parse(_commandLineArguments))
         {
             case (_, HelpResult help):
                 _console.Info(help.Text);

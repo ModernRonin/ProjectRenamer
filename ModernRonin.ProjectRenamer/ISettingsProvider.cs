@@ -2,5 +2,5 @@
 
 public interface ISettingsProvider
 {
-    Settings GetSettings(string solutionPath);
+    Settings GetSettings();
 }

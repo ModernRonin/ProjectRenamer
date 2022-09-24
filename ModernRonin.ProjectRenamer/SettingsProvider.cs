@@ -9,17 +9,17 @@ public sealed class SettingsProvider : ISettingsProvider
     readonly IFilesystem _filesystem;
     readonly IGit _git;
     readonly IInput _input;
+    readonly IInputSource _inputSource;
     readonly IProjectFinder _projectFinder;
-    readonly Verb _verb;
 
-    public SettingsProvider(Verb verb,
+    public SettingsProvider(IInputSource inputSource,
         IErrorHandler errors,
         IFilesystem filesystem,
         IGit git,
         IInput input,
         IProjectFinder projectFinder)
     {
-        _verb = verb;
+        _inputSource = inputSource;
         _errors = errors;
         _filesystem = filesystem;
         _git = git;
@@ -27,22 +27,23 @@ public sealed class SettingsProvider : ISettingsProvider
         _projectFinder = projectFinder;
     }
 
-    public Settings GetSettings(string solutionPath)
+    public Settings GetSettings()
     {
-        var source = _projectFinder.FindProject(solutionPath, _verb.OldProjectName);
-        if (source is null) _errors.Handle($"{_verb.OldProjectName} cannot be found in the solution");
+        var (verb, solutionPath) = _inputSource.Get();
+        var source = _projectFinder.FindProject(solutionPath, verb.OldProjectName);
+        if (source is null) _errors.Handle($"{verb.OldProjectName} cannot be found in the solution");
 
         var isPaketUsed = _filesystem.DoesDirectoryExist(".paket");
-        var result = _verb.ToSettings();
+        var result = verb.ToSettings();
         result = result with
         {
             IsPaketUsed = isPaketUsed,
             DoPaketInstall = result.DoPaketInstall && isPaketUsed,
             Source = source,
-            Destination = source.Rename(_verb.NewProjectName, _filesystem.CurrentDirectory)
+            Destination = source.Rename(verb.NewProjectName, _filesystem.CurrentDirectory)
         };
         var gitVersion = _git.GetVersion();
-        if (!_verb.DontReviewSettings)
+        if (!verb.DontReviewSettings)
         {
             var lines = new[]
             {

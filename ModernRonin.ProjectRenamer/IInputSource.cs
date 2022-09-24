@@ -2,5 +2,5 @@
 
 public interface IInputSource
 {
-    UserInput Get(string[] commandLineArguments);
+    UserInput Get();
 }

@@ -12,7 +12,7 @@ public class RenamerModuleTests
     public void Setup()
     {
         var builder = new ContainerBuilder();
-        builder.RegisterModule<RenamerModule>();
+        builder.RegisterModule(new RenamerModule(Array.Empty<string>()));
         _container = builder.Build();
     }
 

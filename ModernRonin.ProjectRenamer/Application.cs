@@ -14,12 +14,8 @@ public class Application
     readonly ILogger _logger;
     readonly IRuntime _runtime;
     readonly ISettingsProvider _settingsProvider;
-    readonly string _solutionPath;
-    readonly Verb _verb;
 
-    public Application(Verb verb,
-        string solutionPath,
-        IRuntime runtime,
+    public Application(IRuntime runtime,
         ILogger logger,
         IInput input,
         IGit git,
@@ -27,8 +23,6 @@ public class Application
         IFilesystem filesystem,
         ISettingsProvider settingsProvider)
     {
-        _verb = verb;
-        _solutionPath = solutionPath;
         _runtime = runtime;
         _logger = logger;
         _input = input;
@@ -41,7 +35,7 @@ public class Application
     public void Run()
     {
         _git.EnsureIsClean();
-        var settings = _settingsProvider.GetSettings(_solutionPath);
+        var settings = _settingsProvider.GetSettings();
         var (dependents, dependencies) = analyzeReferences();
         removeFromSolution();
         removeOldReferences();
@@ -93,19 +87,18 @@ public class Application
 
         void commit()
         {
-            if (!_verb.DontCreateCommit)
+            if (settings.DoCreateCommit)
             {
-                var wasMove = _verb.NewProjectName.Any(CommonExtensions.IsDirectorySeparator);
-                var msg = wasMove
+                var msg = settings.IsMove
                     ? $"Moved {settings.Source.FullPath.ToRelativePath(_filesystem.CurrentDirectory)} to {settings.Destination.FullPath.ToRelativePath(_filesystem.CurrentDirectory)}"
-                    : $"Renamed {_verb.OldProjectName} to {_verb.NewProjectName}";
+                    : $"Renamed {settings.Source.Name} to {settings.Destination.Name}";
                 _git.Commit(msg);
             }
         }
 
         void build()
         {
-            if (_verb.DoRunBuild)
+            if (settings.DoBuild)
             {
                 _dotnet.BuildSolution(() =>
                 {
@@ -152,9 +145,8 @@ public class Application
         {
             _filesystem.EnsureDirectoryExists(Path.GetDirectoryName(settings.Destination.Directory));
             _git.Move(settings.Source.Directory, settings.Destination.Directory);
-            var oldPath = Path.GetFileName(settings.Source.FullPath)
-                .ToAbsolutePath(settings.Destination.Directory);
-            if (oldPath != settings.Destination.FullPath) _git.Move(oldPath, settings.Destination.FullPath);
+            if (settings.Source.FullPath != settings.Destination.FullPath)
+                _git.Move(settings.Source.FullPath, settings.Destination.FullPath);
         }
 
         void addToSolution()
@@ -169,14 +161,14 @@ public class Application
         string[] allProjects()
         {
             var all = filesIn(".");
-            var excluded = string.IsNullOrEmpty(_verb.ExcludedDirectory)
+            var excluded = string.IsNullOrEmpty(settings.ExcludedDirectory)
                 ? Enumerable.Empty<string>()
-                : filesIn($@".\{_verb.ExcludedDirectory}");
+                : filesIn($@".\{settings.ExcludedDirectory}");
 
             return all.Except(excluded).ToArray();
 
             string[] filesIn(string directory) =>
-                _filesystem.FindProjectFiles(directory, true, _verb.ProjectFileExtension);
+                _filesystem.FindProjectFiles(directory, true, settings.Source.Extension);
         }
     }
 }

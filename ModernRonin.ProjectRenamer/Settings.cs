@@ -1,4 +1,6 @@
-﻿namespace ModernRonin.ProjectRenamer;
+﻿using System.IO;
+
+namespace ModernRonin.ProjectRenamer;
 
 public sealed record Settings(bool DoBuild,
     bool DoCreateCommit,
@@ -6,4 +8,8 @@ public sealed record Settings(bool DoBuild,
     bool IsPaketUsed,
     string ExcludedDirectory,
     Project Source,
-    Project Destination);
+    Project Destination)
+{
+    public bool IsMove =>
+        Path.GetDirectoryName(Source.Directory) != Path.GetDirectoryName(Destination.Directory);
+}
