@@ -33,13 +33,12 @@ public sealed class SettingsProvider : ISettingsProvider
         if (source is null)
             _errors.Handle($"{_configuration.OldProjectName} cannot be found in the solution");
 
-        var result = new Settings
+        var isPaketUsed = _filesystem.DoesDirectoryExist(".paket");
+        var result = _configuration.ToSettings();
+        result = result with
         {
-            DoCreateCommit = !_configuration.DontCreateCommit,
-            DoBuild = _configuration.DoRunBuild,
-            ExcludedDirectory = _configuration.ExcludedDirectory,
-            DoPaketInstall = !_configuration.DontRunPaketInstall && _filesystem.DoesDirectoryExist(".paket"),
-            IsPaketUsed = _filesystem.DoesDirectoryExist(".paket"),
+            IsPaketUsed = isPaketUsed,
+            DoPaketInstall = result.DoPaketInstall && isPaketUsed,
             Source = source,
             Destination = source.Rename(_configuration.NewProjectName, _filesystem.CurrentDirectory)
         };

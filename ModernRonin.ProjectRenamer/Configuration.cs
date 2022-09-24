@@ -2,6 +2,10 @@
 
 public class Configuration
 {
+    public Settings ToSettings() =>
+        new(DoRunBuild, !DontCreateCommit, !DontRunPaketInstall, default, ExcludedDirectory, default,
+            default);
+
     public bool DontCreateCommit { get; set; }
     public bool DontReviewSettings { get; set; }
     public bool DontRunPaketInstall { get; set; }
