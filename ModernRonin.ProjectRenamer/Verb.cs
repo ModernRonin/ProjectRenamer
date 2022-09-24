@@ -1,6 +1,6 @@
 ﻿namespace ModernRonin.ProjectRenamer;
 
-public class Configuration
+public class Verb
 {
     public Settings ToSettings() =>
         new(DoRunBuild, !DontCreateCommit, !DontRunPaketInstall, default, ExcludedDirectory, default,

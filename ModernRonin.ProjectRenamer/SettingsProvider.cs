@@ -5,21 +5,21 @@ namespace ModernRonin.ProjectRenamer;
 
 public sealed class SettingsProvider : ISettingsProvider
 {
-    readonly Configuration _configuration;
     readonly IErrorHandler _errors;
     readonly IFilesystem _filesystem;
     readonly IGit _git;
     readonly IInput _input;
     readonly IProjectFinder _projectFinder;
+    readonly Verb _verb;
 
-    public SettingsProvider(Configuration configuration,
+    public SettingsProvider(Verb verb,
         IErrorHandler errors,
         IFilesystem filesystem,
         IGit git,
         IInput input,
         IProjectFinder projectFinder)
     {
-        _configuration = configuration;
+        _verb = verb;
         _errors = errors;
         _filesystem = filesystem;
         _git = git;
@@ -29,21 +29,20 @@ public sealed class SettingsProvider : ISettingsProvider
 
     public Settings GetSettings(string solutionPath)
     {
-        var source = _projectFinder.FindProject(solutionPath, _configuration.OldProjectName);
-        if (source is null)
-            _errors.Handle($"{_configuration.OldProjectName} cannot be found in the solution");
+        var source = _projectFinder.FindProject(solutionPath, _verb.OldProjectName);
+        if (source is null) _errors.Handle($"{_verb.OldProjectName} cannot be found in the solution");
 
         var isPaketUsed = _filesystem.DoesDirectoryExist(".paket");
-        var result = _configuration.ToSettings();
+        var result = _verb.ToSettings();
         result = result with
         {
             IsPaketUsed = isPaketUsed,
             DoPaketInstall = result.DoPaketInstall && isPaketUsed,
             Source = source,
-            Destination = source.Rename(_configuration.NewProjectName, _filesystem.CurrentDirectory)
+            Destination = source.Rename(_verb.NewProjectName, _filesystem.CurrentDirectory)
         };
         var gitVersion = _git.GetVersion();
-        if (!_configuration.DontReviewSettings)
+        if (!_verb.DontReviewSettings)
         {
             var lines = new[]
             {

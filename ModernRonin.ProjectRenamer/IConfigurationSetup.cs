@@ -1,7 +1,6 @@
-﻿namespace ModernRonin.ProjectRenamer
+﻿namespace ModernRonin.ProjectRenamer;
+
+public interface IConfigurationSetup
 {
-    public interface IConfigurationSetup
-    {
-        (Configuration configuration, string solutionPath) Get(string[] commandLineArguments);
-    }
+    (Verb configuration, string solutionPath) Get(string[] commandLineArguments);
 }

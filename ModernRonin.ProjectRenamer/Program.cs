@@ -12,7 +12,7 @@ class Program
         var (configuration, solutionPath) = setup.Get(args);
         if (configuration == default) return;
 
-        var applicationFactory = container.Resolve<Func<Configuration, string, Application>>();
+        var applicationFactory = container.Resolve<Func<Verb, string, Application>>();
         var application = applicationFactory(configuration, solutionPath);
         application.Run();
     }

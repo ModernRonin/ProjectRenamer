@@ -9,7 +9,7 @@ public static class CommandLineArguments
     {
         var result = ParserFactory.Create("renameproject",
             "Rename C# projects comfortably, including renaming directories, updating references, keeping your git history intact, creating a git commit and updating paket, if needed.");
-        var cfg = result.DefaultVerb<Configuration>();
+        var cfg = result.DefaultVerb<Verb>();
         cfg.Parameter(c => c.DontCreateCommit)
             .WithLongName("no-commit")
             .WithShortName("nc")

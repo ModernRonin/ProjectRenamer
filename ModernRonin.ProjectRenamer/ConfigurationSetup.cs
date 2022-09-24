@@ -27,7 +27,7 @@ public class ConfigurationSetup : IConfigurationSetup
         _parser = parser;
     }
 
-    public (Configuration configuration, string solutionPath) Get(string[] commandLineArguments)
+    public (Verb configuration, string solutionPath) Get(string[] commandLineArguments)
     {
         var solutionFiles = _filesystem.FindSolutionFiles(".", false);
         if (1 != solutionFiles.Length)
@@ -39,7 +39,7 @@ public class ConfigurationSetup : IConfigurationSetup
                 _console.Info(help.Text);
                 _runtime.Abort(help.IsResultOfInvalidInput ? -1 : 0);
                 break;
-            case (var helpOverview, Configuration configuration):
+            case (var helpOverview, Verb configuration):
                 if (configuration.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))
                 {
                     _errors.Handle(

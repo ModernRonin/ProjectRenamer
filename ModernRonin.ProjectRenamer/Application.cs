@@ -7,7 +7,6 @@ namespace ModernRonin.ProjectRenamer;
 
 public class Application
 {
-    readonly Configuration _configuration;
     readonly IDotnet _dotnet;
     readonly IFilesystem _filesystem;
     readonly IGit _git;
@@ -16,8 +15,9 @@ public class Application
     readonly IRuntime _runtime;
     readonly ISettingsProvider _settingsProvider;
     readonly string _solutionPath;
+    readonly Verb _verb;
 
-    public Application(Configuration configuration,
+    public Application(Verb verb,
         string solutionPath,
         IRuntime runtime,
         ILogger logger,
@@ -27,7 +27,7 @@ public class Application
         IFilesystem filesystem,
         ISettingsProvider settingsProvider)
     {
-        _configuration = configuration;
+        _verb = verb;
         _solutionPath = solutionPath;
         _runtime = runtime;
         _logger = logger;
@@ -93,19 +93,19 @@ public class Application
 
         void commit()
         {
-            if (!_configuration.DontCreateCommit)
+            if (!_verb.DontCreateCommit)
             {
-                var wasMove = _configuration.NewProjectName.Any(CommonExtensions.IsDirectorySeparator);
+                var wasMove = _verb.NewProjectName.Any(CommonExtensions.IsDirectorySeparator);
                 var msg = wasMove
                     ? $"Moved {settings.Source.FullPath.ToRelativePath(_filesystem.CurrentDirectory)} to {settings.Destination.FullPath.ToRelativePath(_filesystem.CurrentDirectory)}"
-                    : $"Renamed {_configuration.OldProjectName} to {_configuration.NewProjectName}";
+                    : $"Renamed {_verb.OldProjectName} to {_verb.NewProjectName}";
                 _git.Commit(msg);
             }
         }
 
         void build()
         {
-            if (_configuration.DoRunBuild)
+            if (_verb.DoRunBuild)
             {
                 _dotnet.BuildSolution(() =>
                 {
@@ -169,14 +169,14 @@ public class Application
         string[] allProjects()
         {
             var all = filesIn(".");
-            var excluded = string.IsNullOrEmpty(_configuration.ExcludedDirectory)
+            var excluded = string.IsNullOrEmpty(_verb.ExcludedDirectory)
                 ? Enumerable.Empty<string>()
-                : filesIn($@".\{_configuration.ExcludedDirectory}");
+                : filesIn($@".\{_verb.ExcludedDirectory}");
 
             return all.Except(excluded).ToArray();
 
             string[] filesIn(string directory) =>
-                _filesystem.FindProjectFiles(directory, true, _configuration.ProjectFileExtension);
+                _filesystem.FindProjectFiles(directory, true, _verb.ProjectFileExtension);
         }
     }
 }
