@@ -5,6 +5,10 @@ using System.IO;
 
 namespace ModernRonin.ProjectRenamer;
 
+/// <summary>
+///     Unfortunately, this is fundamentally untestable, but at least we've concentrated all the untestable stuff into one
+///     type.
+/// </summary>
 public class Runtime : IRuntime
 {
     readonly ILogger _logger;
