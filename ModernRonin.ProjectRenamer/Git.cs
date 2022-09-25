@@ -4,16 +4,13 @@ namespace ModernRonin.ProjectRenamer;
 
 public class Git : IGit
 {
-    readonly IErrorHandler _errors;
     readonly ILogger _logger;
     readonly IToolRunner _runner;
 
     public Git(ILogger logger,
-        IErrorHandler errors,
         Func<string, IToolRunner> toolRunnerFactory)
     {
         _logger = logger;
-        _errors = errors;
         _runner = toolRunnerFactory("git");
     }
 
@@ -34,7 +31,7 @@ public class Git : IGit
 
         void run(string arguments) => _runner.Run(arguments, onError);
 
-        void onError() => _errors.Handle("git does not seem to be clean, check git status");
+        void onError() => throw new AbortException("git does not seem to be clean, check git status");
     }
 
     public string GetVersion() => _runner.RunAndGetOutput("--version");

@@ -34,7 +34,7 @@ public class ToolRunnerTests
     }
 
     [Test]
-    public void Run_without_onError_passes_standard_error_handler_to_runtime()
+    public void Run_without_onError_throws_on_error()
     {
         // arrange
         Action received = null;
@@ -43,8 +43,8 @@ public class ToolRunnerTests
         _underTest.Run("-a -b");
         // assert
         received.Should().NotBeNull();
-        received.Invoke();
-        Errors.Received().Handle("myTool", "-a -b");
+        var action = () => received.Invoke();
+        action.Should().Throw<AbortException>().WithMessage("call 'myTool -a -b' failed - aborting");
     }
 
     [Test]
@@ -61,7 +61,7 @@ public class ToolRunnerTests
     }
 
     [Test]
-    public void RunAndGetOutput_without_onError_passes_standard_error_handler_to_runtime()
+    public void RunAndGetOutput_without_onError_throws_on_error()
     {
         // arrange
         Action received = null;
@@ -71,7 +71,7 @@ public class ToolRunnerTests
         _underTest.RunAndGetOutput("-a -b");
         // assert
         received.Should().NotBeNull();
-        received.Invoke();
-        Errors.Received().Handle("myTool", "-a -b");
+        var action = () => received.Invoke();
+        action.Should().Throw<AbortException>().WithMessage("call 'myTool -a -b' failed - aborting");
     }
 }

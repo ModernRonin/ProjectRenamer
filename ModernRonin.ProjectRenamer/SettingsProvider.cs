@@ -5,7 +5,6 @@ namespace ModernRonin.ProjectRenamer;
 
 public sealed class SettingsProvider : ISettingsProvider
 {
-    readonly IErrorHandler _errors;
     readonly IFilesystem _filesystem;
     readonly IGit _git;
     readonly IInputSource _inputSource;
@@ -13,14 +12,12 @@ public sealed class SettingsProvider : ISettingsProvider
     readonly IRuntime _runtime;
 
     public SettingsProvider(IInputSource inputSource,
-        IErrorHandler errors,
         IFilesystem filesystem,
         IGit git,
         IProjectFinder projectFinder,
         IRuntime runtime)
     {
         _inputSource = inputSource;
-        _errors = errors;
         _filesystem = filesystem;
         _git = git;
         _projectFinder = projectFinder;
@@ -31,7 +28,8 @@ public sealed class SettingsProvider : ISettingsProvider
     {
         var (verb, solutionPath) = _inputSource.Get();
         var source = _projectFinder.FindProject(solutionPath, verb.OldProjectName);
-        if (source is null) _errors.Handle($"{verb.OldProjectName} cannot be found in the solution");
+        if (source is null)
+            throw new AbortException($"{verb.OldProjectName} cannot be found in the solution");
 
         var isPaketUsed = _filesystem.DoesDirectoryExist(".paket");
         var result = verb.ToSettings();
@@ -62,7 +60,7 @@ public sealed class SettingsProvider : ISettingsProvider
                 "Do you want to continue with the rename operation?"
             };
             if (!_runtime.AskUser(string.Join(Environment.NewLine, lines)))
-                _errors.Handle("You decided to abort.");
+                throw new AbortException("You decided to abort.");
         }
 
         return result;

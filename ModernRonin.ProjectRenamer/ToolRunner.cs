@@ -4,14 +4,12 @@ namespace ModernRonin.ProjectRenamer;
 
 public sealed class ToolRunner : IToolRunner
 {
-    readonly IErrorHandler _errors;
     readonly IRuntime _runtime;
     readonly string _tool;
 
-    public ToolRunner(IRuntime runtime, IErrorHandler errors, string tool)
+    public ToolRunner(IRuntime runtime, string tool)
     {
         _tool = tool;
-        _errors = errors;
         _runtime = runtime;
     }
 
@@ -26,6 +24,6 @@ public sealed class ToolRunner : IToolRunner
 
     Action OnError(string arguments)
     {
-        return () => _errors.Handle(_tool, arguments);
+        return () => throw new AbortException(_tool, arguments);
     }
 }

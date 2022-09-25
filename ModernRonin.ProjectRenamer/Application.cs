@@ -101,11 +101,7 @@ public class Application
                 {
                     if (_runtime.AskUser(
                             "dotnet build returned an error or warning - do you want to rollback all changes?")
-                       )
-                    {
-                        _git.RollbackAllChanges();
-                        _runtime.Abort();
-                    }
+                       ) throw new AbortException();
                 });
             }
         }

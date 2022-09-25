@@ -2,8 +2,16 @@
 using ModernRonin.ProjectRenamer;
 
 var container = wireUp();
-var application = container.Resolve<Application>();
-application.Run();
+var (application, errorHandler) = (container.Resolve<Application>(), container.Resolve<IErrorHandler>());
+
+try
+{
+    application.Run();
+}
+catch (AbortException x)
+{
+    errorHandler.HandleException(x);
+}
 
 IContainer wireUp()
 {

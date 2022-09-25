@@ -1,6 +1,5 @@
 ﻿using System;
 using AutofacContrib.NSubstitute;
-using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -23,52 +22,43 @@ public class ErrorHandlerTests
     IRuntime Runtime => _dependencies.Resolve<IRuntime>();
 
     [Test]
-    public void Handle_with_a_message_does_not_reset_git()
+    public void HandleException_does_not_roll_back_changes_if_doResetGit_is_false()
     {
+        // arrange
+        var ex = new AbortException("bla", false, -13);
         // act
-        _underTest.Handle("bla");
-        // assert
-        Git.Value.ReceivedCalls().Should().BeEmpty();
+        _underTest.HandleException(ex);
+        // arrange
+        Git.Value.DidNotReceive().RollbackAllChanges();
     }
 
     [Test]
-    public void Handle_with_a_message_logs_the_error_and_THEN_aborts()
+    public void HandleException_logs_an_error_and_aborts_the_process([Values] bool doResetGit)
     {
+        // arrange
+        var ex = new AbortException("bla", doResetGit, -13);
         // act
-        _underTest.Handle("bla");
-        // assert
+        _underTest.HandleException(ex);
+        // arrange
         Received.InOrder(() =>
         {
             Logger.Error("bla");
-            Runtime.Abort();
+            Runtime.Abort(-13);
         });
     }
 
     [Test]
-    public void Handle_with_a_tool_and_arguments_logs_an_error_resets_git_and_aborts()
+    public void HandleException_rolls_back_all_changes_before_aborting_the_process_if_doResetGit_is_true()
     {
+        // arrange
+        var ex = new AbortException("bla", true, -13);
         // act
-        _underTest.Handle("myTool", "-a -b");
-        // assert
+        _underTest.HandleException(ex);
+        // arrange
         Received.InOrder(() =>
         {
-            Logger.Error("call 'myTool -a -b' failed - aborting");
             Git.Value.RollbackAllChanges();
-            Runtime.Abort();
-        });
-    }
-
-    [Test]
-    public void HandleAndReset_logs_the_error_resets_git_and_aborts()
-    {
-        // act
-        _underTest.HandleAndReset("bla");
-        // assert
-        Received.InOrder(() =>
-        {
-            Logger.Error("bla");
-            Git.Value.RollbackAllChanges();
-            Runtime.Abort();
+            Runtime.Abort(-13);
         });
     }
 }

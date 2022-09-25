@@ -15,15 +15,9 @@ public class ErrorHandler : IErrorHandler
         _runtime = runtime;
     }
 
-    public void Handle(string msg) => Handle(msg, false);
-
-    public void Handle(string tool, string arguments) =>
-        Handle($"call '{tool} {arguments}' failed - aborting", true);
-
-    public void HandleAndReset(string msg) => Handle(msg, true);
-
-    void Handle(string msg, bool doResetGit)
+    public void HandleException(AbortException exception)
     {
+        var (msg, doResetGit, exitCode) = exception;
         _logger.Error(msg);
         if (doResetGit)
         {
@@ -31,6 +25,6 @@ public class ErrorHandler : IErrorHandler
             _git.Value.RollbackAllChanges();
         }
 
-        _runtime.Abort();
+        _runtime.Abort(exitCode);
     }
 }

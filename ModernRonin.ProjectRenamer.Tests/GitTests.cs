@@ -52,17 +52,6 @@ public class GitTests
     }
 
     [Test]
-    public void EnsureIsClean_errors_out_if_any_of_the_commands_fails()
-    {
-        // arrange
-        Runner.When(r => r.Run("diff-files --quiet", Arg.Any<Action>())).Do(ci => ci.Arg<Action>().Invoke());
-        // act
-        _underTest.EnsureIsClean();
-        // assert
-        Errors.Received().Handle("git does not seem to be clean, check git status");
-    }
-
-    [Test]
     public void EnsureIsClean_sets_up_a_series_of_git_commands()
     {
         // act
@@ -75,6 +64,19 @@ public class GitTests
             Runner.Run("diff-files --quiet", Arg.Any<Action>());
             Runner.Run("ls-files --exclude-standard --others", Arg.Any<Action>());
         });
+    }
+
+    [Test]
+    public void EnsureIsClean_throws_if_any_of_the_commands_fails()
+    {
+        // arrange
+        Runner.When(r => r.Run("diff-files --quiet", Arg.Any<Action>())).Do(ci => ci.Arg<Action>().Invoke());
+        // act
+        var action = () => _underTest.EnsureIsClean();
+        // assert
+        action.Should()
+            .Throw<AbortException>()
+            .WithMessage("git does not seem to be clean, check git status");
     }
 
     [Test]
