@@ -15,7 +15,7 @@ public class Filesystem : IFilesystem
             .ToArray();
 
     public string[] FindSolutionFiles(string directory, bool doRecurse) =>
-        Directory.EnumerateFiles(".", $"*{Constants.SolutionFileExtension}", SearchOption(doRecurse))
+        Directory.EnumerateFiles(directory, $"*{Constants.SolutionFileExtension}", SearchOption(doRecurse))
             .ToArray();
 
     static SearchOption SearchOption(bool doRecurse) =>
