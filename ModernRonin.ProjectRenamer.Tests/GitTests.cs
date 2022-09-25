@@ -25,7 +25,7 @@ public class GitTests
     AutoSubstitute _dependencies;
     Git _underTest;
     IErrorHandler Errors => _dependencies.Resolve<IErrorHandler>();
-    ILogger Logger => _dependencies.Resolve<ILogger>();
+    IRuntime Runtime => _dependencies.Resolve<IRuntime>();
     IToolRunner Runner => _dependencies.Resolve<IToolRunner>();
 
     [Test]
@@ -39,7 +39,7 @@ public class GitTests
         // assert
         received.Should().NotBeNull();
         received.Invoke();
-        Logger.Received().Error("'git commit -m \"bla\"' failed");
+        Runtime.Received().Error("'git commit -m \"bla\"' failed");
     }
 
     [Test]
@@ -124,7 +124,7 @@ public class GitTests
         received.Should().NotBeNull();
         received.Invoke();
         Errors.ReceivedCalls().Should().BeEmpty();
-        Logger.ReceivedCalls().Should().BeEmpty();
+        Runtime.ReceivedCalls().Should().BeEmpty();
     }
 
     [Test]

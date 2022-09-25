@@ -6,10 +6,11 @@ using System.IO;
 namespace ModernRonin.ProjectRenamer;
 
 /// <summary>
-///     Unfortunately, this is fundamentally untestable, but at least we've concentrated all the untestable stuff into one
+///     Unfortunately, this is fundamentally untestable, but at least we've concentrated almost all the untestable stuff
+///     into one
 ///     type.
 /// </summary>
-public class Runtime : IRuntime, ILogger
+public class Runtime : IRuntime
 {
     public void Abort(int exitCode = -1) => Environment.Exit(exitCode);
 

@@ -18,7 +18,6 @@ public class ErrorHandlerTests
     AutoSubstitute _dependencies;
     ErrorHandler _underTest;
     Lazy<IGit> Git => _dependencies.Resolve<Lazy<IGit>>();
-    ILogger Logger => _dependencies.Resolve<ILogger>();
     IRuntime Runtime => _dependencies.Resolve<IRuntime>();
 
     [Test]
@@ -42,7 +41,7 @@ public class ErrorHandlerTests
         // arrange
         Received.InOrder(() =>
         {
-            Logger.Error("bla");
+            Runtime.Error("bla");
             Runtime.Abort(-13);
         });
     }
