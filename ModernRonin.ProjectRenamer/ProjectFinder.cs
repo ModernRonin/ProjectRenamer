@@ -16,7 +16,7 @@ public sealed class ProjectFinder : IProjectFinder
         var project = solution.ProjectsInOrder.FirstOrDefault(matchesProject);
         if (project is null) return null;
 
-        var projectPath = Path.Combine(project.AbsolutePath.Split('\\'));
+        var projectPath = project.AbsolutePath.NormalizePath();
         var solutionFolder = project.ParentProjectGuid is null
             ? null
             : solutionFolderPath(solution.ProjectsByGuid[project.ParentProjectGuid]);

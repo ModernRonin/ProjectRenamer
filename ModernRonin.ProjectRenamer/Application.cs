@@ -75,7 +75,7 @@ public class Application
         IEnumerable<string> getReferencedProjects(string project)
         {
             var relativeReferences = _dotnet.GetReferencedProjects(project)
-                .Select(p => p = Path.Combine(p.Split('\\')));
+                .Select(p => p.NormalizePath());
             var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
             return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
         }
