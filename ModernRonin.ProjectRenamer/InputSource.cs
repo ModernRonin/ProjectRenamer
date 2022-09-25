@@ -9,16 +9,16 @@ namespace ModernRonin.ProjectRenamer;
 public class InputSource : IInputSource
 {
     readonly string[] _commandLineArguments;
-    readonly ILogger _console;
     readonly IFilesystem _filesystem;
     readonly IBindingCommandLineParser _parser;
+    readonly IRuntime _runtime;
 
-    public InputSource(ILogger console,
+    public InputSource(IRuntime runtime,
         IFilesystem filesystem,
         IBindingCommandLineParser parser,
         string[] commandLineArguments)
     {
-        _console = console;
+        _runtime = runtime;
         _filesystem = filesystem;
         _parser = parser;
         _commandLineArguments = commandLineArguments;
@@ -33,7 +33,7 @@ public class InputSource : IInputSource
         switch (_parser.HelpOverview, _parser.Parse(_commandLineArguments))
         {
             case (_, HelpResult help):
-                _console.Info(help.Text);
+                _runtime.Info(help.Text);
                 throw new AbortException(help.IsResultOfInvalidInput ? -1 : 0);
             case (var helpOverview, Verb verb):
                 if (verb.OldProjectName.Any(CommonExtensions.IsDirectorySeparator))

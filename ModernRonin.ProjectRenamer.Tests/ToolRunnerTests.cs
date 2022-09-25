@@ -18,7 +18,6 @@ public class ToolRunnerTests
 
     AutoSubstitute _dependencies;
     ToolRunner _underTest;
-    IErrorHandler Errors => _dependencies.Resolve<IErrorHandler>();
     IRuntime Runtime => _dependencies.Resolve<IRuntime>();
 
     [Test]

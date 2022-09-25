@@ -6,6 +6,8 @@ public interface IRuntime
 {
     void Abort(int exitCode = -1);
     bool AskUser(string question);
+    void Error(string msg);
+    void Info(string msg);
 
     void Run(string tool, string arguments, Action onNonZeroExitCode);
     string RunAndGetOutput(string tool, string arguments, Action onNonZeroExitCode);

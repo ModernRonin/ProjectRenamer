@@ -10,19 +10,16 @@ public class Application
     readonly IDotnet _dotnet;
     readonly IFilesystem _filesystem;
     readonly IGit _git;
-    readonly ILogger _logger;
     readonly IRuntime _runtime;
     readonly ISettingsProvider _settingsProvider;
 
     public Application(IRuntime runtime,
-        ILogger logger,
         IGit git,
         IDotnet dotnet,
         IFilesystem filesystem,
         ISettingsProvider settingsProvider)
     {
         _runtime = runtime;
-        _logger = logger;
         _git = git;
         _dotnet = dotnet;
         _filesystem = filesystem;
@@ -59,7 +56,7 @@ public class Application
 
         (string[] dependents, string[] dependencies) analyzeReferences()
         {
-            _logger.Info(
+            _runtime.Info(
                 "Analyzing references in your projects - depending on the number of projects this can take a bit...");
 
             return (
