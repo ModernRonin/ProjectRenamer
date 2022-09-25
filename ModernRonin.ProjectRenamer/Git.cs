@@ -23,9 +23,8 @@ public class Git : IGit
         run("diff-files --quiet");
         run("ls-files --exclude-standard --others");
 
-        void run(string arguments) => _runner.Run(arguments, onError);
-
-        void onError() => throw new AbortException("git does not seem to be clean, check git status");
+        void run(string arguments) =>
+            _runner.Run(arguments, new AbortException("git does not seem to be clean, check git status"));
     }
 
     public string GetVersion() => _runner.RunAndGetOutput("--version");

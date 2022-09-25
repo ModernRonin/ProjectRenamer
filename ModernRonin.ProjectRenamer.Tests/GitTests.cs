@@ -38,6 +38,18 @@ public class GitTests
     }
 
     [Test]
+    public void EnsureIsClean_passes_a_meaningfull_message_for_the_errorException()
+    {
+        // arrange
+        // act
+        _underTest.EnsureIsClean();
+        // assert
+        Runner.Received()
+            .Run(Arg.Any<string>(),
+                Arg.Is<AbortException>(x => x.Message == "git does not seem to be clean, check git status"));
+    }
+
+    [Test]
     public void EnsureIsClean_sets_up_a_series_of_git_commands()
     {
         // act
@@ -45,24 +57,11 @@ public class GitTests
         // assert
         Received.InOrder(() =>
         {
-            Runner.Run("update-index -q --refresh", Arg.Any<Action>());
-            Runner.Run("diff-index --quiet --cached HEAD --", Arg.Any<Action>());
-            Runner.Run("diff-files --quiet", Arg.Any<Action>());
-            Runner.Run("ls-files --exclude-standard --others", Arg.Any<Action>());
+            Runner.Run("update-index -q --refresh", Arg.Any<AbortException>());
+            Runner.Run("diff-index --quiet --cached HEAD --", Arg.Any<AbortException>());
+            Runner.Run("diff-files --quiet", Arg.Any<AbortException>());
+            Runner.Run("ls-files --exclude-standard --others", Arg.Any<AbortException>());
         });
-    }
-
-    [Test]
-    public void EnsureIsClean_throws_if_any_of_the_commands_fails()
-    {
-        // arrange
-        Runner.When(r => r.Run("diff-files --quiet", Arg.Any<Action>())).Do(ci => ci.Arg<Action>().Invoke());
-        // act
-        var action = () => _underTest.EnsureIsClean();
-        // assert
-        action.Should()
-            .Throw<AbortException>()
-            .WithMessage("git does not seem to be clean, check git status");
     }
 
     [Test]

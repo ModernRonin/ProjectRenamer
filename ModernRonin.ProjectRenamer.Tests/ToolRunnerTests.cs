@@ -33,6 +33,20 @@ public class ToolRunnerTests
     }
 
     [Test]
+    public void Run_with_errorException_throws_the_errorException_on_error()
+    {
+        // arrange
+        Action received = null;
+        Runtime.When(r => r.Run("myTool", "-a -b", Arg.Any<Action>())).Do(ci => received = ci.Arg<Action>());
+        var x = new AbortException();
+        // act
+        _underTest.Run("-a -b", x);
+        // assert
+        var action = () => received.Invoke();
+        action.Should().Throw<AbortException>().Which.Should().BeSameAs(x);
+    }
+
+    [Test]
     public void Run_with_errorMessage_logs_the_errorMessage_on_error()
     {
         // arrange

@@ -13,6 +13,9 @@ public sealed class ToolRunner : IToolRunner
         _runtime = runtime;
     }
 
+    public void Run(string arguments, AbortException errorException) =>
+        Run(arguments, () => throw errorException);
+
     public void Run(string arguments, string errorMessage) =>
         Run(arguments, () => _runtime.Error(errorMessage));
 
