@@ -13,6 +13,9 @@ public sealed class ToolRunner : IToolRunner
         _runtime = runtime;
     }
 
+    public void Run(string arguments, string errorMessage) =>
+        Run(arguments, () => _runtime.Error(errorMessage));
+
     public void Run(string arguments) => Run(arguments, OnError(arguments));
 
     public void Run(string arguments, Action onError) => _runtime.Run(_tool, arguments, onError);

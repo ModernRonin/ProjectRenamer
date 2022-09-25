@@ -29,26 +29,12 @@ public class GitTests
     IToolRunner Runner => _dependencies.Resolve<IToolRunner>();
 
     [Test]
-    public void Commit_logs_errors()
-    {
-        // arrange
-        Action received = null;
-        Runner.WhenForAnyArgs(r => r.Run(default, default)).Do(ci => received = ci.Arg<Action>());
-        // act
-        _underTest.Commit("bla");
-        // assert
-        received.Should().NotBeNull();
-        received.Invoke();
-        Runtime.Received().Error("'git commit -m \"bla\"' failed");
-    }
-
-    [Test]
     public void Commit_sends_the_right_command_to_the_runner()
     {
         // act
         _underTest.Commit("bla");
         // assert
-        Runner.Received().Run("commit -m \"bla\"", Arg.Any<Action>());
+        Runner.Received().Run("commit -m \"bla\"", "'git commit -m \"bla\"' failed");
     }
 
     [Test]
@@ -117,7 +103,7 @@ public class GitTests
 
         // arrange
         Action received = null;
-        Runner.WhenForAnyArgs(r => r.Run(default, default)).Do(ci => received = ci.Arg<Action>());
+        Runner.WhenForAnyArgs(r => r.Run(default, (Action)default)).Do(ci => received = ci.Arg<Action>());
         // act
         _underTest.RollbackAllChanges();
         // assert

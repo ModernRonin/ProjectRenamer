@@ -5,21 +5,15 @@ namespace ModernRonin.ProjectRenamer;
 public class Git : IGit
 {
     readonly IToolRunner _runner;
-    readonly IRuntime _runtime;
 
     public Git(IRuntime runtime,
-        Func<string, IToolRunner> toolRunnerFactory)
-    {
-        _runtime = runtime;
+        Func<string, IToolRunner> toolRunnerFactory) =>
         _runner = toolRunnerFactory("git");
-    }
 
     public void Commit(string msg)
     {
         var arguments = $"commit -m \"{msg}\"";
-        _runner.Run(arguments, onError);
-
-        void onError() => _runtime.Error($"'git {arguments}' failed");
+        _runner.Run(arguments, $"'git {arguments}' failed");
     }
 
     public void EnsureIsClean()

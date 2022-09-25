@@ -33,6 +33,19 @@ public class ToolRunnerTests
     }
 
     [Test]
+    public void Run_with_errorMessage_logs_the_errorMessage_on_error()
+    {
+        // arrange
+        Action received = null;
+        Runtime.When(r => r.Run("myTool", "-a -b", Arg.Any<Action>())).Do(ci => received = ci.Arg<Action>());
+        // act
+        _underTest.Run("-a -b", "bla");
+        // assert
+        received.Invoke();
+        Runtime.Received().Error("bla");
+    }
+
+    [Test]
     public void Run_without_onError_throws_on_error()
     {
         // arrange
