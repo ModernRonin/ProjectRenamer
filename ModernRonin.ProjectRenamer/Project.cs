@@ -9,7 +9,6 @@ public sealed record Project(string FullPath, string SolutionFolder, string Exte
 {
     public Project Rename(string newName, string currentDirectory)
     {
-        var p = new FileSystemPath(FullPath);
         var cd = new FileSystemPath(currentDirectory);
         var nn = new FileSystemPath(newName);
         var d = new FileSystemPath(Directory);

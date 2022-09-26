@@ -30,7 +30,28 @@ public sealed record FileSystemPath
 
     public FileSystemPath this[int index] => new(ImmutableArray<string>.Empty.Add(_segments[index]));
 
-    public FileSystemPath Append(FileSystemPath other) => new(_segments.AddRange(other._segments));
+    public FileSystemPath Append(FileSystemPath other)
+    {
+        var (levelsToGoUp, toAppend) = getRelativity(other._segments);
+        return new FileSystemPath(MoveUp(levelsToGoUp)._segments.AddRange(toAppend));
+
+        (int levelsToGoUp, ImmutableArray<string> toAppend) getRelativity(ImmutableArray<string> what)
+        {
+            if (what.IsEmpty) return (0, what);
+            var (head, tail) = (what.First(), what.RemoveAt(0));
+            switch (head)
+            {
+                case ".": return getRelativity(tail);
+                case "..":
+                    var (i, a) = getRelativity(tail);
+                    return (i + 1, a);
+                default: return (0, what);
+            }
+        }
+    }
+
+    public FileSystemPath MoveUp(int numberOfLevels) =>
+        new(_segments.RemoveRange(_segments.Length - numberOfLevels, numberOfLevels));
 
     /// <summary>
     ///     Necessary to support ranges.
