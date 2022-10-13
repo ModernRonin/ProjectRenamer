@@ -50,7 +50,7 @@ namespace ModernRonin.ProjectRenamer.Tests
                 @"..\..\.paket.restore"
                     .MoveRelativePath("/users/mine/projects", "/users/mine/github/projects/first")
                     .Should()
-                    .Be(@"../../../.paket.restore");
+                    .Be(@"../../../../.paket.restore");
             }
         }
 
