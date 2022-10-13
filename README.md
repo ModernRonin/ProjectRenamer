@@ -37,6 +37,9 @@ dotnet tool update --global ModernRonin.ProjectRenamer
 When I publish a new version, I always post at [my blog](https://modernronin.github.io/) under the [renameproject tag](https://modernronin.github.io/tags/renameproject/), aside from updating this readme here.
 
 ### Release History
+2.2.1:
+* bugfix: all Import Project directives with relative paths will be correctly adjusted now
+
 2.2.0:
 * feature: tool can be used on VB projects, too; thanks to [@fsbflavio](https://github.com/fsbflavio) for the PR!
 * bugfix: fixed a potential deadlock; thanks to [@fsbflavio](https://github.com/fsbflavio) for the PR!
