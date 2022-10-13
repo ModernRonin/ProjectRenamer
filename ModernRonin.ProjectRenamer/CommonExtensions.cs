@@ -13,6 +13,14 @@ namespace ModernRonin.ProjectRenamer
         public static bool IsDirectorySeparator(this char self) =>
             self == Path.DirectorySeparatorChar || self == Path.AltDirectorySeparatorChar;
 
+        public static string MoveRelativePath(this string self,
+            string oldBaseDirectory,
+            string newBaseDirectory)
+        {
+            var absolute = self.ToAbsolutePath(oldBaseDirectory);
+            return absolute.ToRelativePath(newBaseDirectory);
+        }
+
         public static string Repeat(this string self, int count)
         {
             var result = new StringBuilder(self.Length * count);

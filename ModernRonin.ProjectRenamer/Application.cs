@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Microsoft.Build.Construction;
 using MoreLinq.Extensions;
 
@@ -82,7 +83,7 @@ namespace ModernRonin.ProjectRenamer
             removeFromSolution();
             removeOldReferences();
             gitMove();
-            updatePaketReference();
+            updateImportProjects();
             addNewReferences();
             addToSolution();
             updatePaket();
@@ -120,7 +121,8 @@ namespace ModernRonin.ProjectRenamer
 
             IEnumerable<string> getReferencedProjects(string project)
             {
-                var relativeReferences = _dotnet.GetReferencedProjects(project).Select(p => p = Path.Combine(p.Split('\\')));
+                var relativeReferences = _dotnet.GetReferencedProjects(project)
+                    .Select(p => p = Path.Combine(p.Split('\\')));
                 var baseDirectory = Path.GetFullPath(Path.GetDirectoryName(project));
                 return relativeReferences.Select(r => r.ToAbsolutePath(baseDirectory));
             }
@@ -146,8 +148,8 @@ namespace ModernRonin.ProjectRenamer
                     _dotnet.BuildSolution(() =>
                     {
                         if (_input.AskUser(
-                            "dotnet build returned an error or warning - do you want to rollback all changes?")
-                        )
+                                "dotnet build returned an error or warning - do you want to rollback all changes?")
+                           )
                         {
                             _git.RollbackAllChanges();
                             _runtime.Abort();
@@ -161,25 +163,17 @@ namespace ModernRonin.ProjectRenamer
                 if (isPaketUsed && !_configuration.DontRunPaketInstall) _dotnet.PaketInstall();
             }
 
-            void updatePaketReference()
+            void updateImportProjects()
             {
-                if (!isPaketUsed) return;
-                const string restoreTargets = @"\.paket\Paket.Restore.targets";
-                var nesting = Path.GetFullPath(newProjectPath).Count(CommonExtensions.IsDirectorySeparator) -
-                              CurrentDirectoryAbsolute.Count(CommonExtensions.IsDirectorySeparator) - 1;
-                var paketPath = @"..\".Repeat(nesting)[..^1] + restoreTargets;
-                var lines = File.ReadAllLines(newProjectPath).Select(fixup);
-                File.WriteAllLines(newProjectPath, lines);
+                var project = XDocument.Load(newProjectPath).Root;
+                project!.Elements().Where(e => e.Name == "Import").ForEach(updateProject);
+                project.Save(newProjectPath);
 
-                string fixup(string line) =>
-                    isPaketReference(line) ? $"<Import Project=\"{paketPath}\" />" : line;
-
-                bool isPaketReference(string line)
+                void updateProject(XElement import)
                 {
-                    var trimmed = line.Trim();
-                    if (!trimmed.StartsWith("<Import Project")) return false;
-                    if (!trimmed.Contains(restoreTargets)) return false;
-                    return true;
+                    var projectReference = import.Attribute("Project");
+                    if (projectReference != null)
+                        projectReference.Value = projectReference.Value.MoveRelativePath(oldDir, newDir);
                 }
             }
 
@@ -208,7 +202,8 @@ namespace ModernRonin.ProjectRenamer
                 return project switch
                 {
                     null => (false, null, null),
-                    _ when project.ParentProjectGuid == null => (true, Path.Combine(project.AbsolutePath.Split('\\')), null),
+                    _ when project.ParentProjectGuid == null => (true,
+                        Path.Combine(project.AbsolutePath.Split('\\')), null),
                     _ => (true, Path.Combine(project.AbsolutePath.Split('\\')),
                         path(solution.ProjectsByGuid[project.ParentProjectGuid]))
                 };
@@ -231,7 +226,8 @@ namespace ModernRonin.ProjectRenamer
 
                 return all.Except(excluded).ToArray();
 
-                string[] filesIn(string directory) => _filesystem.FindProjectFiles(directory, true, _configuration.ProjectFileExtension);
+                string[] filesIn(string directory) =>
+                    _filesystem.FindProjectFiles(directory, true, _configuration.ProjectFileExtension);
             }
         }
 

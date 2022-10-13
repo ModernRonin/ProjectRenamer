@@ -37,6 +37,24 @@ namespace ModernRonin.ProjectRenamer.Tests
         }
 
         [Test]
+        public void MoveRelativePath()
+        {
+            if (IsWindows)
+            {
+                @"..\..\.paket.restore".MoveRelativePath(@"c:\projects\mine", @"c:\github\projects\first")
+                    .Should()
+                    .Be(@"..\..\..\.paket.restore");
+            }
+            else
+            {
+                @"..\..\.paket.restore"
+                    .MoveRelativePath("/users/mine/projects", "/users/mine/github/projects/first")
+                    .Should()
+                    .Be(@"..\..\..\.paket.restore");
+            }
+        }
+
+        [Test]
         public void Repeat_returns_the_string_repeated_the_passed_number_of_times() =>
             "alpha".Repeat(3).Should().Be("alphaalphaalpha");
 
