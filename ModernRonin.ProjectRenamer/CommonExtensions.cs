@@ -28,15 +28,23 @@ namespace ModernRonin.ProjectRenamer
             return result.ToString();
         }
 
+        public static string ReplaceBackslashesWithSlashesOnLinux(this string self)
+        {
+            if (Path.DirectorySeparatorChar != Path.AltDirectorySeparatorChar)
+                return self; // we are on Windows
+            return self.Replace('\\', '/');
+        }
+
         public static string ReplaceSlashesWithBackslashes(this string self) => self.Replace('/', '\\');
 
         public static string ToAbsolutePath(this string self, string baseDirectory)
         {
             if (self.First().IsDirectorySeparator()) self = self[1..];
+            self = self.ReplaceBackslashesWithSlashesOnLinux();
             return Path.GetFullPath(self, baseDirectory);
         }
 
         public static string ToRelativePath(this string self, string baseDirectory) =>
-            Path.GetRelativePath(baseDirectory, self);
+            Path.GetRelativePath(baseDirectory, self.ReplaceBackslashesWithSlashesOnLinux());
     }
 }
