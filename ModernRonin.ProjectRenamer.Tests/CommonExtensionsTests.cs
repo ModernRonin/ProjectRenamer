@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -48,15 +47,10 @@ namespace ModernRonin.ProjectRenamer.Tests
             }
             else
             {
-                var absolutePath = @"..\..\.paket.restore".ToAbsolutePath("/users/mine/projects");
-                var relative = absolutePath.ToRelativePath("/users/mine/github/projects/first");
-                Console.WriteLine(absolutePath);
-                Console.WriteLine(relative);
-
                 @"..\..\.paket.restore"
                     .MoveRelativePath("/users/mine/projects", "/users/mine/github/projects/first")
                     .Should()
-                    .Be(@"..\..\..\.paket.restore");
+                    .Be(@"../../../.paket.restore");
             }
         }
 
